@@ -1,12 +1,11 @@
 package nl.futureedge.sonar.plugin.packageanalyzer.model;
 
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * Package.
@@ -14,7 +13,7 @@ import java.util.TreeMap;
  * @param <E>
  *            external type
  */
-public final class Package<E> {
+public final class Package<E> implements Comparable<Package<E>> {
 
 	private final Model<E> parentModel;
 	private final String name;
@@ -22,8 +21,8 @@ public final class Package<E> {
 
 	private final Map<String, Class<E>> classes = new TreeMap<>();
 
-	private final Set<Package<E>> packageUsages = new HashSet<>();
-	private final Set<Package<E>> usedByPackages = new HashSet<>();
+	private final SortedSet<Package<E>> packageUsages = new TreeSet<>();
+	private final SortedSet<Package<E>> usedByPackages = new TreeSet<>();
 
 	/**
 	 * Construct a new package.
@@ -69,8 +68,8 @@ public final class Package<E> {
 	/**
 	 * @return classes
 	 */
-	public Set<Class<E>> getClasses() {
-		return Collections.unmodifiableSet(new LinkedHashSet<>(classes.values()));
+	public SortedSet<Class<E>> getClasses() {
+		return Collections.unmodifiableSortedSet(new TreeSet<>(classes.values()));
 	}
 
 	/**
@@ -128,15 +127,15 @@ public final class Package<E> {
 	/**
 	 * @return package usages
 	 */
-	public Set<Package<E>> getPackageUsages() {
-		return Collections.unmodifiableSet( packageUsages);
+	public SortedSet<Package<E>> getPackageUsages() {
+		return Collections.unmodifiableSortedSet( packageUsages);
 	}
 
 	/**
 	 * @return used by packages
 	 */
-	public Set<Package<E>> getUsedByPackages() {
-		return Collections.unmodifiableSet(usedByPackages);
+	public SortedSet<Package<E>> getUsedByPackages() {
+		return Collections.unmodifiableSortedSet(usedByPackages);
 	}
 
 	@Override
@@ -157,4 +156,8 @@ public final class Package<E> {
 		return "Package [name=" + name + ", external=" + (external == null ? "missing" : "filled") + "]";
 	}
 
+	@Override
+	public int compareTo(Package<E> that) {
+		return this.name.compareTo(that.name);
+	}
 }

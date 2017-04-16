@@ -1,9 +1,9 @@
 package nl.futureedge.sonar.plugin.packageanalyzer.model;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * Class.
@@ -11,7 +11,7 @@ import java.util.Set;
  * @param <E>
  *            external type
  */
-public final class Class<E> {
+public final class Class<E> implements Comparable<Class<E>> {
 
 	private final Model<E> parentModel;
 	private final Package<E> parentPackage;
@@ -19,8 +19,8 @@ public final class Class<E> {
 	private boolean isAbstract;
 	private E external;
 
-	private final Set<Class<E>> classUsages = new HashSet<>();
-	private final Set<Class<E>> usedByClasses = new HashSet<>();
+	private final SortedSet<Class<E>> classUsages = new TreeSet<>();
+	private final SortedSet<Class<E>> usedByClasses = new TreeSet<>();
 
 	/**
 	 * Construct a new class.
@@ -39,14 +39,27 @@ public final class Class<E> {
 		this.parentModel = parentModel;
 		this.name = name;
 	}
-	
+
 	/**
 	 * @return name
 	 */
 	public String getName() {
 		return name;
 	}
-	
+
+	/**
+	 * @return fully qualified name
+	 */
+	public String getFullyQualifiedName() {
+		StringBuilder result = new StringBuilder();
+		result.append(parentPackage.getName());
+		if (result.length() > 0) {
+			result.append(".");
+		}
+		result.append(name);
+		return result.toString();
+	}
+
 	/**
 	 * Set abstract.
 	 * 
@@ -107,15 +120,15 @@ public final class Class<E> {
 	/**
 	 * @return class usages
 	 */
-	public Set<Class<E>> getUsages() {
-		return Collections.unmodifiableSet(classUsages);
+	public SortedSet<Class<E>> getUsages() {
+		return Collections.unmodifiableSortedSet(classUsages);
 	}
-	
+
 	/**
 	 * @return used by classes
 	 */
-	public Set<Class<E>> getUsedByClasses() {
-		return Collections.unmodifiableSet(usedByClasses);
+	public SortedSet<Class<E>> getUsedByClasses() {
+		return Collections.unmodifiableSortedSet(usedByClasses);
 	}
 
 	/**
@@ -145,4 +158,13 @@ public final class Class<E> {
 				+ (external == null ? "missing" : "filled") + "]";
 	}
 
+	@Override
+	public int compareTo(Class<E> that) {
+		int result = this.parentPackage.compareTo(that.parentPackage);
+		if (result == 0) {
+			result = this.name.compareTo(that.name);
+		}
+
+		return result;
+	}
 }

@@ -12,7 +12,8 @@ public class JavaRulesTest {
 				new AfferentCouplingRule(),
 				new EfferentCouplingRule(),
 				new InstabilityRule(),
-				new NumberOfClassesAndInterfacesRule()
+				new NumberOfClassesAndInterfacesRule(),
+				new PackageDependencyCyclesRule()
 				);
 		
 		RulesDefinition.Context context = new RulesDefinition.Context();

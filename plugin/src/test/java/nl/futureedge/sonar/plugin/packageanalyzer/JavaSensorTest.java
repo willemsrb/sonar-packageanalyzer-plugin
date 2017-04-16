@@ -22,10 +22,8 @@ import org.sonar.api.config.MapSettings;
 import org.sonar.api.config.Settings;
 
 import nl.futureedge.sonar.plugin.packageanalyzer.java.JavaClasspathProperties;
-import nl.futureedge.sonar.plugin.packageanalyzer.model.Class;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Model;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.ModelPrinter;
-import nl.futureedge.sonar.plugin.packageanalyzer.model.Package;
 import nl.futureedge.sonar.plugin.packageanalyzer.rules.Location;
 import nl.futureedge.sonar.plugin.packageanalyzer.sensor.JavaSensor;
 

@@ -10,6 +10,7 @@ import nl.futureedge.sonar.plugin.packageanalyzer.rules.EfferentCouplingRule;
 import nl.futureedge.sonar.plugin.packageanalyzer.rules.InstabilityRule;
 import nl.futureedge.sonar.plugin.packageanalyzer.rules.JavaRules;
 import nl.futureedge.sonar.plugin.packageanalyzer.rules.NumberOfClassesAndInterfacesRule;
+import nl.futureedge.sonar.plugin.packageanalyzer.rules.PackageDependencyCyclesRule;
 import nl.futureedge.sonar.plugin.packageanalyzer.sensor.JavaSensor;
 
 /**
@@ -30,7 +31,8 @@ public final class PackageAnalyzerPlugin implements Plugin {
 				AfferentCouplingRule.class,
 				EfferentCouplingRule.class,
 				InstabilityRule.class,
-				NumberOfClassesAndInterfacesRule.class);
+				NumberOfClassesAndInterfacesRule.class,
+				PackageDependencyCyclesRule.class);
 		
 		// Java
 		context.addExtensions(JavaRules.class, JavaSensor.class);
