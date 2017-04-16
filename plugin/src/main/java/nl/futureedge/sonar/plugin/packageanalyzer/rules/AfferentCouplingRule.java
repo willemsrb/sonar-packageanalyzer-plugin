@@ -2,6 +2,8 @@ package nl.futureedge.sonar.plugin.packageanalyzer.rules;
 
 import org.sonar.api.batch.rule.ActiveRule;
 import org.sonar.api.batch.sensor.SensorContext;
+import org.sonar.api.rule.Severity;
+import org.sonar.api.rules.RuleType;
 import org.sonar.api.server.rule.RuleParamType;
 import org.sonar.api.server.rule.RulesDefinition.NewRepository;
 import org.sonar.api.server.rule.RulesDefinition.NewRule;
@@ -30,8 +32,8 @@ public class AfferentCouplingRule extends AbstractPackageAnalyzerRule implements
 
 	@Override
 	public void define(final NewRepository repository) {
-		final NewRule afferentCouplingsRule = repository.createRule(RULE_KEY).setName("Afferent Coupling")
-				.setHtmlDescription(
+		final NewRule afferentCouplingsRule = repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL)
+				.setSeverity(Severity.MAJOR).setName("Afferent Coupling").setHtmlDescription(
 						"The number of other packages that depend upon classes within the package is an indicator of the package's responsibility.");
 		afferentCouplingsRule.createParam(PARAM_MAXIMUM).setName(PARAM_MAXIMUM)
 				.setDescription("Maximum number of other packages allowed to depend upon classes within the package")

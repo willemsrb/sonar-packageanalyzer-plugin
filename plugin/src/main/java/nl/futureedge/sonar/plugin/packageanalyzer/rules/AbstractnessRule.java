@@ -2,6 +2,8 @@ package nl.futureedge.sonar.plugin.packageanalyzer.rules;
 
 import org.sonar.api.batch.rule.ActiveRule;
 import org.sonar.api.batch.sensor.SensorContext;
+import org.sonar.api.rule.Severity;
+import org.sonar.api.rules.RuleType;
 import org.sonar.api.server.rule.RuleParamType;
 import org.sonar.api.server.rule.RulesDefinition.NewRepository;
 import org.sonar.api.server.rule.RulesDefinition.NewRule;
@@ -31,9 +33,10 @@ public class AbstractnessRule extends AbstractPackageAnalyzerRule implements Pac
 
 	@Override
 	public void define(final NewRepository repository) {
-		final NewRule abstractnessRule = repository.createRule(RULE_KEY).setName("Abstractness").setHtmlDescription(
-				"The ratio of the number of abstract classes (and interfaces) in the analyzed package to the total number of classes in the analyzed package.<br/>"
-						+ "The range for this metric is 0% to 100%, with A=0% indicating a completely concrete package and A=100% indicating a completely abstract package.");
+		final NewRule abstractnessRule = repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL)
+				.setSeverity(Severity.MAJOR).setName("Abstractness").setHtmlDescription(
+						"The ratio of the number of abstract classes (and interfaces) in the analyzed package to the total number of classes in the analyzed package.<br/>"
+								+ "The range for this metric is 0% to 100%, with A=0% indicating a completely concrete package and A=100% indicating a completely abstract package.");
 		abstractnessRule.createParam(PARAM_MAXIMUM).setName(PARAM_MAXIMUM)
 				.setDescription("Maximum abstractness of a package allowed").setType(RuleParamType.INTEGER)
 				.setDefaultValue("75");

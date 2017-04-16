@@ -125,7 +125,7 @@ public final class Tarjan<T> {
 		}
 
 		// If v is a root node, pop the stack and generate a SCC
-		if (vertex.lowlink == vertex.index) {
+		if (vertex.lowlink.equals(vertex.index)) {
 			// Start a new strongly connected component
 			final List<T> stronglyConnectedComponent = new ArrayList<>();
 

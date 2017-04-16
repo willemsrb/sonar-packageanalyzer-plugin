@@ -2,6 +2,8 @@ package nl.futureedge.sonar.plugin.packageanalyzer.rules;
 
 import org.sonar.api.batch.rule.ActiveRule;
 import org.sonar.api.batch.sensor.SensorContext;
+import org.sonar.api.rule.Severity;
+import org.sonar.api.rules.RuleType;
 import org.sonar.api.server.rule.RulesDefinition.NewRepository;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
@@ -27,9 +29,9 @@ public class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRule imp
 
 	@Override
 	public void define(final NewRepository repository) {
-		repository.createRule(RULE_KEY).setName("Package Dependency Cycles").setHtmlDescription(
-				"Package dependency cycles are reported along with the hierarchical paths of packages participating in package dependency cycles.");
-
+		repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL).setSeverity(Severity.CRITICAL)
+				.setName("Package Dependency Cycles").setHtmlDescription(
+						"Package dependency cycles are reported along with the hierarchical paths of packages participating in package dependency cycles.");
 	}
 
 	@Override
