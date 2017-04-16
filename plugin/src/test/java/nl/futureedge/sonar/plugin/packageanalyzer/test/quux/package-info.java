@@ -1,0 +1,1 @@
+package nl.futureedge.sonar.plugin.packageanalyzer.test.quux;

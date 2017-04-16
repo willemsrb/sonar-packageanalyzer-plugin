@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>nl.future-edge.sonarqube.plugins</groupId>
+		<artifactId>sonar-packageanalyzer</artifactId>
+		<version>1.0-SNAPSHOT</version>
+		<relativePath>../pom.xml</relativePath>
+	</parent>
+
+	<artifactId>sonar-packageanalyzer-plugin</artifactId>
+
+	<name>Package Analyzer - Plugin</name>
+	<description>Package Analyzer Plugin for SonarQube - Plugin</description>
+
+	<properties>
+		<sonar.plugin-api.version>6.3</sonar.plugin-api.version>
+		<sonar.orchestrator.version>3.13</sonar.orchestrator.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.sonarsource.sonarqube</groupId>
+			<artifactId>sonar-plugin-api</artifactId>
+			<version>${sonar.plugin-api.version}</version>
+			<scope>provided</scope>
+		</dependency>
+
+
+		<dependency>
+			<groupId>nl.future-edge.sonarqube.plugins</groupId>
+			<artifactId>sonar-packageanalyzer-java</artifactId>
+			<version>${project.version}</version>
+			<!-- <exclusions> <exclusion> <groupId>org.apache.maven</groupId> <artifactId>maven-project</artifactId> 
+				</exclusion> <exclusion> <groupId>org.sonarsource.java</groupId> <artifactId>java-maven-model</artifactId> 
+				</exclusion> <exclusion> <groupId>org.picocontainer</groupId> <artifactId>picocontainer</artifactId> 
+				</exclusion> <exclusion> <groupId>org.slf4j</groupId> <artifactId>slf4j-api</artifactId> 
+				</exclusion> </exclusions> -->
+		</dependency>
+
+		<!-- <dependency> <groupId>org.codehaus.plexus</groupId> <artifactId>plexus-classworlds</artifactId> 
+			<version>2.5.2</version> </dependency> -->
+
+		<!-- Unit tests -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.11</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>2.7.22</version>
+		</dependency>
+
+		<!-- Integration tests -->
+		<dependency>
+			<groupId>org.sonarsource.orchestrator</groupId>
+			<artifactId>sonar-orchestrator</artifactId>
+			<version>${sonar.orchestrator.version}</version>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-lang</groupId>
+					<artifactId>commons-lang</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.google.guava</groupId>
+					<artifactId>guava</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-api</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.22</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<!-- Compilation -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>${jdk.version}</source>
+					<target>${jdk.version}</target>
+				</configuration>
+			</plugin>
+
+			<!-- Integration test plugins -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy-resources-for-it</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${basedir}/target/it</outputDirectory>
+							<resources>
+								<resource>
+									<directory>src/test/it</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
