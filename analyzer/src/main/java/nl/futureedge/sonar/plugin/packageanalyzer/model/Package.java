@@ -13,7 +13,7 @@ import java.util.TreeSet;
  * @param <E>
  *            external type
  */
-public final class Package<E> implements Comparable<Package<E>> {
+public final class Package<E> implements External<E>, Comparable<Package<E>> {
 
 	private final Model<E> parentModel;
 	private final String name;
@@ -49,6 +49,7 @@ public final class Package<E> implements Comparable<Package<E>> {
 	/**
 	 * @return the external object registered on the class
 	 */
+	@Override
 	public E getExternal() {
 		return external;
 	}
@@ -128,7 +129,7 @@ public final class Package<E> implements Comparable<Package<E>> {
 	 * @return package usages
 	 */
 	public SortedSet<Package<E>> getPackageUsages() {
-		return Collections.unmodifiableSortedSet( packageUsages);
+		return Collections.unmodifiableSortedSet(packageUsages);
 	}
 
 	/**

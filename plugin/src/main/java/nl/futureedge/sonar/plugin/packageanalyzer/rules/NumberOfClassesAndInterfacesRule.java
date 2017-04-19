@@ -28,12 +28,11 @@ public class NumberOfClassesAndInterfacesRule extends AbstractPackageAnalyzerRul
 	 */
 	public NumberOfClassesAndInterfacesRule() {
 		super(RULE_KEY);
-		LOGGER.info("Instantiating rule");
 	}
 
 	@Override
 	public void define(final NewRepository repository) {
-		LOGGER.info("Defining rule in repostiory {}", repository.key());
+		LOGGER.debug("Defining rule in repostiory {}", repository.key());
 		final NewRule numberOfClassesAndInterfacesRule = repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL)
 				.setSeverity(Severity.MAJOR).setName("Number of Classes and Interfaces").setHtmlDescription(
 						"The number of concrete and abstract classes (and interfaces) in the package is an indicator of the extensibility of the package.");

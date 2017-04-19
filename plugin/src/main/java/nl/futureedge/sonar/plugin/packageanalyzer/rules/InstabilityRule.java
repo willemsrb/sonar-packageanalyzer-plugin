@@ -28,11 +28,11 @@ public final class InstabilityRule extends AbstractPackageAnalyzerRule implement
 	 */
 	public InstabilityRule() {
 		super(RULE_KEY);
-		LOGGER.info("Instantiating rule");
 	}
 
 	@Override
 	public void define(final NewRepository repository) {
+		LOGGER.debug("Defining rule in repostiory {}", repository.key());
 		final NewRule instabilityRule = repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL)
 				.setSeverity(Severity.MAJOR).setName("Instability").setHtmlDescription(
 						"The ratio of efferent coupling (Ce) to total coupling (Ce + Ca) such that I = Ce / (Ce + Ca). This metric is an indicator of the package's resilience to change.<br/>"

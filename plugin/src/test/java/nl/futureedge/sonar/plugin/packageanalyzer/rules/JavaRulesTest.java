@@ -12,6 +12,7 @@ public class JavaRulesTest {
 				new AfferentCouplingRule(),
 				new EfferentCouplingRule(),
 				new InstabilityRule(),
+				new MissingPackageInfoRule(),
 				new NumberOfClassesAndInterfacesRule(),
 				new PackageDependencyCyclesRule()
 				);

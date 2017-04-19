@@ -11,7 +11,8 @@ import nl.futureedge.sonar.plugin.packageanalyzer.rules.Location;
 import nl.futureedge.sonar.plugin.packageanalyzer.rules.PackageAnalyzerRule;
 
 /**
- * Base sensor implementation; contains all logic but not the language specific model.
+ * Base sensor implementation; contains all logic but not the language specific
+ * model.
  */
 public abstract class AbstractSensor implements Sensor {
 
@@ -21,13 +22,13 @@ public abstract class AbstractSensor implements Sensor {
 	private final PackageAnalyzerRule[] rules;
 
 	public AbstractSensor(final String language, final PackageAnalyzerRule... rules) {
-		this.language=language;
+		this.language = language;
 		this.rules = rules;
 	}
-	
+
 	@Override
 	public final void describe(final SensorDescriptor descriptor) {
-		descriptor.name("Package Analyzer Sensor ("+language+")");
+		descriptor.name("Package Analyzer Sensor (" + language + ")");
 		descriptor.onlyOnLanguage(language);
 	}
 
@@ -36,12 +37,14 @@ public abstract class AbstractSensor implements Sensor {
 		LOGGER.info("Build package model ...");
 		final Model<Location> model = buildModel(context);
 		LOGGER.info("Package model built, analyzing model for issues ...");
-	
-		for(final PackageAnalyzerRule rule : rules) {
-			rule.scanModel(context, language, model);
+
+		for (final PackageAnalyzerRule rule : rules) {
+			if (rule.supportsLanguage(language)) {
+				rule.scanModel(context, language, model);
+			}
 		}
 		LOGGER.info("Analysis done");
-	} 
-	
+	}
+
 	protected abstract Model<Location> buildModel(final SensorContext context);
 }

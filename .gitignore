@@ -36,5 +36,6 @@ buildNumber.properties
 build.cmd
 cp.cmd
 go.cmd
+its.cmd
 sonar.cmd
 startup.cmd

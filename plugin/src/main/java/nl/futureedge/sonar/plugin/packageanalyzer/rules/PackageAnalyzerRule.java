@@ -18,12 +18,26 @@ import nl.futureedge.sonar.plugin.packageanalyzer.model.Model;
 @ComputeEngineSide
 @SonarLintSide
 public interface PackageAnalyzerRule extends Definable<RulesDefinition.NewRepository> {
-	
+
 	/**
 	 * Scan the model for issues.
-	 * @param context context (to register issues)
-	 * @param language language
+	 * 
+	 * @param context
+	 *            context (to register issues)
+	 * @param language
+	 *            language
 	 * @param model
 	 */
 	void scanModel(SensorContext context, String language, Model<Location> model);
+
+	/**
+	 * Does this rule support the given language?
+	 * 
+	 * @param language
+	 *            language
+	 * @return default true
+	 */
+	default boolean supportsLanguage(String language) {
+		return true;
+	}
 }

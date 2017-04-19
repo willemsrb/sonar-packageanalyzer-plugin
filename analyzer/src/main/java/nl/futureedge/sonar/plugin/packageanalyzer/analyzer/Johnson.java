@@ -7,9 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.sonar.api.utils.log.Logger;
-import org.sonar.api.utils.log.Loggers;
-
 /**
  * Donald B Johnson's algorithm for finding all the elementary circuits of a
  * directed graph.
@@ -18,8 +15,6 @@ import org.sonar.api.utils.log.Loggers;
  *            Vertex type
  */
 public final class Johnson<T> {
-
-	private static final Logger LOGGER = Loggers.get(Johnson.class);
 
 	// Input
 	// integer list array Ak(n)
@@ -86,12 +81,9 @@ public final class Johnson<T> {
 
 		// for w in Ak(v)
 		for (final T nextVertex : edges.get(currentVertex)) {
-			LOGGER.info("start={}, currentVertex={}; stack={}, next vertex = {}", start, currentVertex, stack,
-					nextVertex);
 			// do
 			// if w = s
 			if (nextVertex.equals(start)) {
-				LOGGER.info("Found circuit");
 				// then
 				// begin
 				// output circuit composed of stack followed by s
@@ -105,7 +97,6 @@ public final class Johnson<T> {
 
 				result = true;
 			} else {
-				LOGGER.info("Circuit not found");
 				// else
 				// if not blocked(w)
 				// then

@@ -3,8 +3,10 @@ package nl.futureedge.sonar.plugin.packageanalyzer.sensor;
 import java.io.IOException;
 import java.util.List;
 
+import org.sonar.api.batch.fs.FilePredicate;
 import org.sonar.api.batch.fs.FileSystem;
 import org.sonar.api.batch.fs.InputFile;
+import org.sonar.api.batch.fs.InputFile.Type;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.config.Settings;
 import org.sonar.api.utils.log.Logger;
@@ -46,7 +48,7 @@ public final class JavaSensor extends AbstractSensor {
 		this.settings = settings;
 	}
 
-	public Model<Location> buildModel(SensorContext context) {
+	public Model<Location> buildModel(final SensorContext context) {
 		// Result
 		final Model<Location> model = new Model<>();
 		final ModelCreatingTreeVisitor visitor = new ModelCreatingTreeVisitor(model);
@@ -56,7 +58,12 @@ public final class JavaSensor extends AbstractSensor {
 		final JavaClasspath javaClassPath = new JavaClasspath(settings, context.fileSystem());
 		final FileSystem fs = context.fileSystem();
 		LOGGER.info("Filesystem: {}", fs);
-		for (final InputFile file : fs.inputFiles(fs.predicates().hasLanguage(LANGUAGE))) {
+
+		// Scan only main files for the 'current' language.
+		final FilePredicate filesToScan = fs.predicates().and(fs.predicates().hasType(Type.MAIN),
+				fs.predicates().hasLanguage(LANGUAGE));
+
+		for (final InputFile file : fs.inputFiles(filesToScan)) {
 			// Parse source
 			LOGGER.info("Analyzing source file: {}", file.relativePath());
 			try {

@@ -16,6 +16,7 @@ import org.sonar.api.utils.log.Loggers;
 
 import nl.futureedge.sonar.plugin.packageanalyzer.analyzer.Analyzer;
 import nl.futureedge.sonar.plugin.packageanalyzer.analyzer.PackageCycle;
+import nl.futureedge.sonar.plugin.packageanalyzer.metrics.PackageAnalyzerMetrics;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Class;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Model;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Package;
@@ -46,11 +47,18 @@ public class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRule imp
 
 	@Override
 	public void scanModel(final SensorContext context, final ActiveRule rule, final Model<Location> model) {
+		// Analyze
 		final Analyzer<Location> analyzer = new Analyzer<>();
 		final List<PackageCycle<Location>> packageCycles = analyzer.findPackageCycles(model);
 
+		int packageCycleIdentifier = 0;
+
+		// Rule
 		for (final PackageCycle<Location> packageCycle : packageCycles) {
+			packageCycleIdentifier++;
 			for (final Package<Location> packageInCycle : packageCycle.getPackagesInCycle()) {
+				registerMeasure(context, PackageAnalyzerMetrics.PACKAGE_DEPENDENCY_CYCLES_IDENTIFIER, packageInCycle,
+					Integer.toString(packageCycleIdentifier));
 				final String message = formatMessage(packageCycle, packageInCycle);
 				registerIssue(context, rule, packageInCycle, message);
 			}
@@ -61,7 +69,7 @@ public class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRule imp
 		final StringBuilder message = new StringBuilder();
 		message.append("Remove the package cycle containing the following cycle of packages:");
 
-		final List<Package<Location>> packagesInCycle = cycleToPacakge(packageCycle.getPackagesInCycle(), forPackage);
+		final List<Package<Location>> packagesInCycle = cycleToPackage(packageCycle.getPackagesInCycle(), forPackage);
 		for (int i = 0; i < packagesInCycle.size(); i++) {
 			final Package<Location> packageFrom = packagesInCycle.get(i);
 			final Package<Location> packageTo = i == packagesInCycle.size() - 1 ? packagesInCycle.get(0)
@@ -69,11 +77,11 @@ public class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRule imp
 			message.append("\nPackage ").append(packageFrom.getName());
 			for (final Class<Location> classInPackage : packageFrom.getClasses()) {
 				Set<Class<Location>> usages = getUsagesOnPackage(classInPackage, packageTo);
-				if(!usages.isEmpty()) {
+				if (!usages.isEmpty()) {
 					message.append("\n - ").append(classInPackage.getFullyQualifiedName()).append(" (references ");
 					message.append(usages.stream().map(Class::getFullyQualifiedName).collect(Collectors.joining(", ")));
 					message.append(")");
-					
+
 				}
 			}
 		}
@@ -81,19 +89,20 @@ public class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRule imp
 		return message.toString();
 	}
 
-	private List<Package<Location>> cycleToPacakge(List<Package<Location>> packagesInCycle,
+	private List<Package<Location>> cycleToPackage(final List<Package<Location>> packagesInCycle,
 			Package<Location> forPackage) {
-		List<Package<Location>> result = new ArrayList<>(packagesInCycle);
-		
-		while(!result.get(0).equals(forPackage)) {
+		final List<Package<Location>> result = new ArrayList<>(packagesInCycle);
+
+		while (!result.get(0).equals(forPackage)) {
 			result.add(result.remove(0));
 		}
 
 		return result;
 	}
 
-	private 	Set<Class<Location>>  getUsagesOnPackage(final Class<Location> classInPackage, final Package<Location> packageTo) {
-		Set<Class<Location>> result  = new HashSet<>();
+	private Set<Class<Location>> getUsagesOnPackage(final Class<Location> classInPackage,
+			final Package<Location> packageTo) {
+		final Set<Class<Location>> result = new HashSet<>();
 		for (final Class<Location> usage : classInPackage.getUsages()) {
 			if (usage.getParentPackage().getName().equals(packageTo.getName())) {
 				result.add(usage);

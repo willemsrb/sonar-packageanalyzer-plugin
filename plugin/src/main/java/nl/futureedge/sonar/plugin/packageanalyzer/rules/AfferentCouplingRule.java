@@ -32,6 +32,7 @@ public class AfferentCouplingRule extends AbstractPackageAnalyzerRule implements
 
 	@Override
 	public void define(final NewRepository repository) {
+		LOGGER.debug("Defining rule in repostiory {}", repository.key());
 		final NewRule afferentCouplingsRule = repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL)
 				.setSeverity(Severity.MAJOR).setName("Afferent Coupling").setHtmlDescription(
 						"The number of other packages that depend upon classes within the package is an indicator of the package's responsibility.");

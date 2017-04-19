@@ -11,7 +11,7 @@ import java.util.TreeSet;
  * @param <E>
  *            external type
  */
-public final class Class<E> implements Comparable<Class<E>> {
+public final class Class<E> implements External<E>, Comparable<Class<E>> {
 
 	private final Model<E> parentModel;
 	private final Package<E> parentPackage;
@@ -82,6 +82,7 @@ public final class Class<E> implements Comparable<Class<E>> {
 	/**
 	 * @return the external object registered on the class
 	 */
+	@Override
 	public E getExternal() {
 		return external;
 	}
