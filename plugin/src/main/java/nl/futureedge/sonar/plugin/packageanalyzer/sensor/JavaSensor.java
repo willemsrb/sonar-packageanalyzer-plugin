@@ -1,7 +1,6 @@
 package nl.futureedge.sonar.plugin.packageanalyzer.sensor;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.sonar.api.batch.fs.FilePredicate;
 import org.sonar.api.batch.fs.FileSystem;
@@ -21,7 +20,6 @@ import nl.futureedge.sonar.plugin.packageanalyzer.java.api.tree.BaseTreeVisitor;
 import nl.futureedge.sonar.plugin.packageanalyzer.java.api.tree.ClassTree;
 import nl.futureedge.sonar.plugin.packageanalyzer.java.api.tree.CompilationUnitTree;
 import nl.futureedge.sonar.plugin.packageanalyzer.java.api.tree.IdentifierTree;
-import nl.futureedge.sonar.plugin.packageanalyzer.java.api.tree.ListTree;
 import nl.futureedge.sonar.plugin.packageanalyzer.java.api.tree.Modifier;
 import nl.futureedge.sonar.plugin.packageanalyzer.java.api.tree.PackageDeclarationTree;
 import nl.futureedge.sonar.plugin.packageanalyzer.java.api.tree.Tree;
@@ -58,7 +56,6 @@ public final class JavaSensor extends AbstractSensor {
 		final ActionParser<Tree> parser = JavaParser.createParser();
 		final JavaClasspath javaClassPath = new JavaClasspath(settings, context.fileSystem());
 		final FileSystem fs = context.fileSystem();
-		LOGGER.info("Filesystem: {}", fs);
 
 		// Scan only main files for the 'current' language.
 		final FilePredicate filesToScan = fs.predicates().and(fs.predicates().hasType(Type.MAIN),
@@ -66,17 +63,17 @@ public final class JavaSensor extends AbstractSensor {
 
 		for (final InputFile file : fs.inputFiles(filesToScan)) {
 			// Parse source
-			LOGGER.info("Analyzing source file: {}", file.relativePath());
+			LOGGER.debug("Analyzing source file: {}", file.relativePath());
 			try {
 				visitor.on(file);
 				final Tree tree = parser.parse(file.contents());
 
 				// Create semantic model
-				LOGGER.info("Creating semantic model ...");
+				LOGGER.debug("Creating semantic model ...");
 				SemanticModel.createFor((CompilationUnitTree) tree, javaClassPath.getElements());
 
 				// Read into model
-				LOGGER.info("Reading model ...");
+				LOGGER.debug("Reading model ...");
 				tree.accept(visitor);
 
 			} catch (IOException e) {
@@ -103,25 +100,7 @@ public final class JavaSensor extends AbstractSensor {
 		}
 
 		@Override
-		protected void scan(List<? extends Tree> arg0) {
-			LOGGER.debug("scan list<tree>: {}", arg0);
-			super.scan(arg0);
-		}
-
-		@Override
-		protected void scan(ListTree<? extends Tree> listTree) {
-			LOGGER.debug("scan listtree: {}", listTree);
-			super.scan(listTree);
-		}
-
-		@Override
-		protected void scan(Tree tree) {
-			LOGGER.debug("scan tree (class {}): {}", tree == null ? "" : tree.getClass(), tree);
-			super.scan(tree);
-		}
-
-		@Override
-		public void visitPackage(PackageDeclarationTree tree) {
+		public void visitPackage(final PackageDeclarationTree tree) {
 			LOGGER.debug("Package tree: {}", tree);
 
 			if (on.relativePath().endsWith("package-info.java")) {
@@ -138,7 +117,7 @@ public final class JavaSensor extends AbstractSensor {
 		}
 
 		@Override
-		public void visitIdentifier(IdentifierTree tree) {
+		public void visitIdentifier(final IdentifierTree tree) {
 			if (inPackageName) {
 				if (packageName.length() > 0) {
 					packageName.append('.');
@@ -146,9 +125,9 @@ public final class JavaSensor extends AbstractSensor {
 				packageName.append(tree.name());
 			} else {
 				LOGGER.debug("Identifier {}", tree);
-				Symbol symbol = tree.symbol();
+				final Symbol symbol = tree.symbol();
 				if (!symbol.isUnknown()) {
-					String fqn = symbol.type().fullyQualifiedName();
+					final String fqn = symbol.type().fullyQualifiedName();
 					LOGGER.debug("Adding class usage {}", fqn);
 					modelClass.addUsage(Name.of(fqn));
 				}

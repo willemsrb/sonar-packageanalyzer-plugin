@@ -42,7 +42,7 @@ public abstract class AbstractSensor implements Sensor {
 
 		for (final PackageAnalyzerRule rule : rules) {
 			if (rule.supportsLanguage(language)) {
-				LOGGER.info("Executing rule: {}", rule);
+				LOGGER.debug("Executing rule: {}", rule);
 				rule.scanModel(context, language, model);
 			}
 		}

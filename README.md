@@ -23,14 +23,15 @@ The ratio of efferent coupling (Ce) to total coupling (Ce + Ca) such that I = Ce
 The number of concrete and abstract classes (and interfaces) in the package is an indicator of the extensibility of the package.
 
 - **Package cycles**
-All elementary package cycles are and reported on all packages, along with the classes participating in the pacage cycle.
+All elementary package cycles are and reported on all packages, along with the classes participating in the package cycle.
 
 - **Missing package-info.java** (java language only)
 Reports missing package-info.java files on all classes the in analyzed package.
 
 ## Metrics
 Current supported metrics are:
-- TODO
+- ** Package cycles**
+Number of elementary package cycles.
 
 ## Languages
 Current supported language are:

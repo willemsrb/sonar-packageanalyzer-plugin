@@ -36,7 +36,7 @@ public abstract class AbstractPackageAnalyzerRule implements PackageAnalyzerRule
 	public final void scanModel(final SensorContext context, final String language, final Model<Location> model) {
 		final ActiveRule rule = context.activeRules().find(RuleKey.of(BaseRules.getRepositoryKey(language), ruleKey));
 		if (rule == null) {
-			LOGGER.info("Rule {}:{} is not active", BaseRules.getRepositoryKey(language), ruleKey);
+			LOGGER.debug("Rule {}:{} is not active", BaseRules.getRepositoryKey(language), ruleKey);
 			return;
 		}
 

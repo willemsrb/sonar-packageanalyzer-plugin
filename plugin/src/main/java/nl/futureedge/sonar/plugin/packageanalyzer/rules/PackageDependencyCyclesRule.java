@@ -37,8 +37,7 @@ public class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRule imp
 	 */
 	public PackageDependencyCyclesRule() {
 		super(RULE_KEY);
-		LOGGER.info("Instantiating rule");
-	}
+		}
 
 	@Override
 	public void define(final NewRepository repository) {
@@ -52,19 +51,19 @@ public class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRule imp
 		// Analyze
 		final Analyzer<Location> analyzer = new Analyzer<>();
 		final List<PackageCycle<Location>> packageCycles = analyzer.findPackageCycles(model);
-		LOGGER.info("Package cycles: {}", packageCycles.size());
+		LOGGER.debug("Package cycles: {}", packageCycles.size());
 
 		int packageCycleIdentifier = 0;
-		Map<Package<Location>,StringBuilder> measures = new HashMap<>();
+		final Map<Package<Location>,StringBuilder> identifierMeasures = new HashMap<>();
 
 		// Rule
 		for (final PackageCycle<Location> packageCycle : packageCycles) {
 			packageCycleIdentifier++;
 			for (final Package<Location> packageInCycle : packageCycle.getPackagesInCycle()) {
-				if(measures.containsKey(packageInCycle)) {
-					measures.get(packageInCycle).append(",").append(Integer.toString(packageCycleIdentifier));
+				if(identifierMeasures.containsKey(packageInCycle)) {
+					identifierMeasures.get(packageInCycle).append(",").append(Integer.toString(packageCycleIdentifier));
 				} else {
-					measures.put(packageInCycle, new StringBuilder(Integer.toString(packageCycleIdentifier)));
+					identifierMeasures.put(packageInCycle, new StringBuilder(Integer.toString(packageCycleIdentifier)));
 				}
 				
 				final String message = formatMessage(packageCycle, packageInCycle);
@@ -73,16 +72,13 @@ public class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRule imp
 		}
 		
 		// Measures
-		for(Map.Entry<Package<Location>, StringBuilder> measure : measures.entrySet()) {
+		for(final Map.Entry<Package<Location>, StringBuilder> measure : identifierMeasures.entrySet()) {
 			registerMeasure(context, PackageAnalyzerMetrics.PACKAGE_DEPENDENCY_CYCLES_IDENTIFIER, measure.getKey(),
 					measure.getValue().toString());
 		}
-		
-		
-
 	}
 
-	private String formatMessage(final PackageCycle<Location> packageCycle, Package<Location> forPackage) {
+	private String formatMessage(final PackageCycle<Location> packageCycle, final Package<Location> forPackage) {
 		final StringBuilder message = new StringBuilder();
 		message.append("Break the package cycle containing the following cycle of packages: ");
 
@@ -116,7 +112,7 @@ public class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRule imp
 	}
 
 	private List<Package<Location>> cycleToPackage(final List<Package<Location>> packagesInCycle,
-			Package<Location> forPackage) {
+			final Package<Location> forPackage) {
 		final List<Package<Location>> result = new ArrayList<>(packagesInCycle);
 
 		while (!result.get(0).equals(forPackage)) {

@@ -27,7 +27,7 @@ public final class PackageAnalyzerPlugin implements Plugin {
 
 	@Override
 	public void define(final Context context) {
-		LOGGER.info("Defining plugin ...");
+		LOGGER.debug("Defining plugin ...");
 		
 		// Rules
 		context.addExtensions(AbstractnessRule.class,
@@ -44,6 +44,6 @@ public final class PackageAnalyzerPlugin implements Plugin {
 		// Java
 		context.addExtensions(JavaRules.class, JavaSensor.class);
 	
-		LOGGER.info("Plugin defined");
+		LOGGER.debug("Plugin defined");
 	}
 }

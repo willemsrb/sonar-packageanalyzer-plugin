@@ -38,30 +38,33 @@ public final class PackageAnalyzerComputer implements MeasureComputer {
 
 	private void rollupIdentifiers(final MeasureComputerContext context) {
 		final Set<String> identifiers = new TreeSet<>();
-		LOGGER.info("Rollup identifiers for (type={}): {}", context.getComponent().getType(),
+		LOGGER.debug("Rollup identifiers for (type={}): {}", context.getComponent().getType(),
 				context.getComponent().getKey());
 
 		// Add own identifiers (from rules)
 		final Measure identifier = context
 				.getMeasure(PackageAnalyzerMetrics.PACKAGE_DEPENDENCY_CYCLES_IDENTIFIER.key());
-		if (identifier != null && !"".equals(identifier.getStringValue())) {
-			identifiers.addAll(Arrays.asList(identifier.getStringValue()));
-		}
-		LOGGER.info("Own identifier: {}", identifier == null ? "none" : identifier.getStringValue());
+		LOGGER.debug("Own identifier: {}", identifier == null ? "none" : identifier.getStringValue());
+		addIdentifiers(identifiers, identifier);
 
 		// Add child identifiers
 		for (final Measure childMeasure : context
 				.getChildrenMeasures(PackageAnalyzerMetrics.PACKAGE_DEPENDENCY_CYCLES_IDENTIFIERS.key())) {
-			if(!"".equals(childMeasure.getStringValue())) {
-				final String[] childIdentifiers = childMeasure.getStringValue().split(",");
-				identifiers.addAll(Arrays.asList(childIdentifiers));
-			}
+			addIdentifiers(identifiers, childMeasure);
 		}
 
 		String result = identifiers.stream().collect(Collectors.joining(","));
-		LOGGER.info("Result: {}", result);
+		LOGGER.debug("Result: {}", result);
 		// Set measure
 		context.addMeasure(PackageAnalyzerMetrics.PACKAGE_DEPENDENCY_CYCLES_IDENTIFIERS.key(), result);
+	}
+
+	private void addIdentifiers(Set<String> identifiers, Measure measure) {
+		if (measure != null && !"".equals(measure.getStringValue())) {
+			final String[] childIdentifiers = measure.getStringValue().split(",");
+			identifiers.addAll(Arrays.asList(childIdentifiers));
+		}
+
 	}
 
 	private void countIdentifiers(final MeasureComputerContext context) {
@@ -75,7 +78,7 @@ public final class PackageAnalyzerComputer implements MeasureComputer {
 			result = identifiers.getStringValue().split(",").length;
 		}
 
-		LOGGER.info("Count -> {}", result);
+		LOGGER.debug("Count -> {}", result);
 
 		// Set measure
 		context.addMeasure(PackageAnalyzerMetrics.PACKAGE_DEPENDENCY_CYCLES.key(), result);
