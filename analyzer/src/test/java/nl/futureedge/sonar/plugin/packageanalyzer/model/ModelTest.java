@@ -68,6 +68,7 @@ public class ModelTest {
 		final Package<String> package2a = model2.addPackage("a", null);
 		Assert.assertEquals(package1a, package1a);
 		Assert.assertEquals(package1a2, package1a2);
+		Assert.assertEquals(package1a2.hashCode(), package1a2.hashCode());
 		Assert.assertNotEquals(package1a, null);
 		Assert.assertNotEquals(package1a, new Object());
 		Assert.assertNotEquals(package1a, package1b);
@@ -80,12 +81,27 @@ public class ModelTest {
 		final Class<String> class2aa = package2a.addClass("a", true, null);
 		Assert.assertEquals(class1aa, class1aa);
 		Assert.assertEquals(class1aa, class1aa2);
+		Assert.assertEquals(class1aa.hashCode(), class1aa2.hashCode());
 		Assert.assertNotEquals(class1aa, null);
 		Assert.assertNotEquals(class1aa, new Object());
 		Assert.assertNotEquals(class1aa, class1ab);
 		Assert.assertNotEquals(class1aa, class1ba);
 		Assert.assertNotEquals(class1aa, class2aa);
 	}
+	
+	@Test
+	public void testClass() {
+		final Model<String> model1 = new Model<>();
+		final Package<String> package1a = model1.addPackage("a", null);
+		final Class<String> class1aa = package1a.addClass("a", true, null);
+		final Class<String> class1b = model1.addClass(Name.of("b"), false, null);
+		
+		Assert.assertEquals("a", class1aa.getName());
+		Assert.assertEquals("a.a", class1aa.getFullyQualifiedName());
+
+		Assert.assertEquals("b", class1b.getName());
+		Assert.assertEquals("b", class1b.getFullyQualifiedName());
+}
 
 	private void assertContainsPackageUsages(Map<String, Package<String>> packages, String packageName,
 			String... packageUsages) {

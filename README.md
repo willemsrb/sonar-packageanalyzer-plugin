@@ -1,5 +1,5 @@
 # Package analyzer plugin for SonarQube [![Build Status](https://travis-ci.org/willemsrb/sonar-packageanalyzer-plugin.svg?branch=master)](https://travis-ci.org/willemsrb/sonar-packageanalyzer-plugin) [![Quality Gate](https://sonarqube.com/api/badges/gate?key=nl.future-edge.sonarqube.plugins:sonar-packageanalyzer)](https://sonarqube.com/dashboard/index?id=nl.future-edge.sonarqube.plugins%3Asonar-packageanalyzer)
-*Requires SonarQube 6.3 (during development)*
+*Requires SonarQube 6.3*
 
 This plugin analyzes the package structure of your modules.
 
