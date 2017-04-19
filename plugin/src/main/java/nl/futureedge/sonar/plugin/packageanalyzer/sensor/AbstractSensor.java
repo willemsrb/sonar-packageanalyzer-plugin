@@ -7,6 +7,7 @@ import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Model;
+import nl.futureedge.sonar.plugin.packageanalyzer.rules.BaseRules;
 import nl.futureedge.sonar.plugin.packageanalyzer.rules.Location;
 import nl.futureedge.sonar.plugin.packageanalyzer.rules.PackageAnalyzerRule;
 
@@ -30,6 +31,7 @@ public abstract class AbstractSensor implements Sensor {
 	public final void describe(final SensorDescriptor descriptor) {
 		descriptor.name("Package Analyzer Sensor (" + language + ")");
 		descriptor.onlyOnLanguage(language);
+		descriptor.createIssuesForRuleRepository(BaseRules.getRepositoryKey(language));
 	}
 
 	@Override
@@ -40,6 +42,7 @@ public abstract class AbstractSensor implements Sensor {
 
 		for (final PackageAnalyzerRule rule : rules) {
 			if (rule.supportsLanguage(language)) {
+				LOGGER.info("Executing rule: {}", rule);
 				rule.scanModel(context, language, model);
 			}
 		}

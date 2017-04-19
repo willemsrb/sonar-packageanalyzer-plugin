@@ -1,8 +1,10 @@
 package nl.futureedge.sonar.plugin.packageanalyzer.rules;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -53,38 +55,61 @@ public class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRule imp
 		LOGGER.info("Package cycles: {}", packageCycles.size());
 
 		int packageCycleIdentifier = 0;
+		Map<Package<Location>,StringBuilder> measures = new HashMap<>();
 
 		// Rule
 		for (final PackageCycle<Location> packageCycle : packageCycles) {
 			packageCycleIdentifier++;
 			for (final Package<Location> packageInCycle : packageCycle.getPackagesInCycle()) {
-				registerMeasure(context, PackageAnalyzerMetrics.PACKAGE_DEPENDENCY_CYCLES_IDENTIFIER, packageInCycle,
-					Integer.toString(packageCycleIdentifier));
+				if(measures.containsKey(packageInCycle)) {
+					measures.get(packageInCycle).append(",").append(Integer.toString(packageCycleIdentifier));
+				} else {
+					measures.put(packageInCycle, new StringBuilder(Integer.toString(packageCycleIdentifier)));
+				}
+				
 				final String message = formatMessage(packageCycle, packageInCycle);
 				registerIssue(context, rule, packageInCycle, message);
 			}
 		}
+		
+		// Measures
+		for(Map.Entry<Package<Location>, StringBuilder> measure : measures.entrySet()) {
+			registerMeasure(context, PackageAnalyzerMetrics.PACKAGE_DEPENDENCY_CYCLES_IDENTIFIER, measure.getKey(),
+					measure.getValue().toString());
+		}
+		
+		
+
 	}
 
 	private String formatMessage(final PackageCycle<Location> packageCycle, Package<Location> forPackage) {
 		final StringBuilder message = new StringBuilder();
-		message.append("Remove the package cycle containing the following cycle of packages:");
+		message.append("Break the package cycle containing the following cycle of packages: ");
 
 		final List<Package<Location>> packagesInCycle = cycleToPackage(packageCycle.getPackagesInCycle(), forPackage);
 		for (int i = 0; i < packagesInCycle.size(); i++) {
 			final Package<Location> packageFrom = packagesInCycle.get(i);
 			final Package<Location> packageTo = i == packagesInCycle.size() - 1 ? packagesInCycle.get(0)
 					: packagesInCycle.get(i + 1);
-			message.append("\nPackage ").append(packageFrom.getName());
+			
+			if(i!=0) {
+				message.append(", ");
+			}
+			message.append("").append(packageFrom.getName()).append(" (");
+			boolean firstClass=true;
 			for (final Class<Location> classInPackage : packageFrom.getClasses()) {
+				if(firstClass) {
+					firstClass=false;
+				} else {
+					message.append(", ");
+				}
 				Set<Class<Location>> usages = getUsagesOnPackage(classInPackage, packageTo);
 				if (!usages.isEmpty()) {
-					message.append("\n - ").append(classInPackage.getFullyQualifiedName()).append(" (references ");
-					message.append(usages.stream().map(Class::getFullyQualifiedName).collect(Collectors.joining(", ")));
-					message.append(")");
-
+					message.append(classInPackage.getName()).append(" references ");
+					message.append(usages.stream().map(Class::getName).collect(Collectors.joining(", ")));
 				}
 			}
+			message.append(")");
 		}
 
 		return message.toString();

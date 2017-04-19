@@ -7,11 +7,17 @@ import java.util.stream.Collectors;
 
 import org.sonar.api.ce.measure.Measure;
 import org.sonar.api.ce.measure.MeasureComputer;
+import org.sonar.api.utils.log.Logger;
+import org.sonar.api.utils.log.Loggers;
+
+import nl.futureedge.sonar.plugin.packageanalyzer.rules.NumberOfClassesAndInterfacesRule;
 
 /**
  * Metrics computer.
  */
 public final class PackageAnalyzerComputer implements MeasureComputer {
+
+	private static final Logger LOGGER = Loggers.get(NumberOfClassesAndInterfacesRule.class);
 
 	@Override
 	public MeasureComputerDefinition define(final MeasureComputerDefinitionContext definitionContext) {
@@ -32,24 +38,30 @@ public final class PackageAnalyzerComputer implements MeasureComputer {
 
 	private void rollupIdentifiers(final MeasureComputerContext context) {
 		final Set<String> identifiers = new TreeSet<>();
+		LOGGER.info("Rollup identifiers for (type={}): {}", context.getComponent().getType(),
+				context.getComponent().getKey());
 
 		// Add own identifiers (from rules)
 		final Measure identifier = context
 				.getMeasure(PackageAnalyzerMetrics.PACKAGE_DEPENDENCY_CYCLES_IDENTIFIER.key());
-		if (identifier != null) {
+		if (identifier != null && !"".equals(identifier.getStringValue())) {
 			identifiers.addAll(Arrays.asList(identifier.getStringValue()));
 		}
+		LOGGER.info("Own identifier: {}", identifier == null ? "none" : identifier.getStringValue());
 
 		// Add child identifiers
 		for (final Measure childMeasure : context
 				.getChildrenMeasures(PackageAnalyzerMetrics.PACKAGE_DEPENDENCY_CYCLES_IDENTIFIERS.key())) {
-			String[] childIdentifiers = childMeasure.getStringValue().split(",");
-			identifiers.addAll(Arrays.asList(childIdentifiers));
+			if(!"".equals(childMeasure.getStringValue())) {
+				final String[] childIdentifiers = childMeasure.getStringValue().split(",");
+				identifiers.addAll(Arrays.asList(childIdentifiers));
+			}
 		}
 
+		String result = identifiers.stream().collect(Collectors.joining(","));
+		LOGGER.info("Result: {}", result);
 		// Set measure
-		context.addMeasure(PackageAnalyzerMetrics.PACKAGE_DEPENDENCY_CYCLES_IDENTIFIERS.key(),
-				identifiers.stream().collect(Collectors.joining(",")));
+		context.addMeasure(PackageAnalyzerMetrics.PACKAGE_DEPENDENCY_CYCLES_IDENTIFIERS.key(), result);
 	}
 
 	private void countIdentifiers(final MeasureComputerContext context) {
@@ -57,11 +69,13 @@ public final class PackageAnalyzerComputer implements MeasureComputer {
 				.getMeasure(PackageAnalyzerMetrics.PACKAGE_DEPENDENCY_CYCLES_IDENTIFIERS.key());
 
 		final int result;
-		if (identifiers == null) {
+		if (identifiers == null || "".equals(identifiers.getStringValue())) {
 			result = 0;
 		} else {
 			result = identifiers.getStringValue().split(",").length;
 		}
+
+		LOGGER.info("Count -> {}", result);
 
 		// Set measure
 		context.addMeasure(PackageAnalyzerMetrics.PACKAGE_DEPENDENCY_CYCLES.key(), result);

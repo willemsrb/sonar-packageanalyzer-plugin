@@ -6,6 +6,7 @@ import org.sonar.api.batch.rule.ActiveRule;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.issue.NewIssue;
 import org.sonar.api.measures.Metric;
+import org.sonar.api.rule.RuleKey;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
@@ -33,9 +34,9 @@ public abstract class AbstractPackageAnalyzerRule implements PackageAnalyzerRule
 
 	@Override
 	public final void scanModel(final SensorContext context, final String language, final Model<Location> model) {
-		final ActiveRule rule = context.activeRules().findByInternalKey(BaseRules.getRepositoryKey(language), ruleKey);
+		final ActiveRule rule = context.activeRules().find(RuleKey.of(BaseRules.getRepositoryKey(language), ruleKey));
 		if (rule == null) {
-			LOGGER.debug("Rule {}:{} is not active", BaseRules.getRepositoryKey(language), ruleKey);
+			LOGGER.info("Rule {}:{} is not active", BaseRules.getRepositoryKey(language), ruleKey);
 			return;
 		}
 
@@ -87,7 +88,7 @@ public abstract class AbstractPackageAnalyzerRule implements PackageAnalyzerRule
 			LOGGER.warn("Measure {} triggered, but {} did not contain a location to register measures.", metric.key(),
 					model);
 		} else {
-			context.newMeasure().on(model.getExternal().getOn()).withValue(value);
+			context.<T>newMeasure().forMetric(metric).on(model.getExternal().getOn()).withValue(value).save();
 		}
 	}
 }

@@ -31,8 +31,8 @@ public class AbstractPackageAnalyzerRuleTest extends BaseRuleTest {
 	public void active() {
 		final ActiveRules activeRules = Mockito.mock(ActiveRules.class);
 		sensorContext.setActiveRules(activeRules);
-		Mockito.when(activeRules.findByInternalKey("package-analyzer-test-no", "test")).thenReturn(null);
-		Mockito.when(activeRules.findByInternalKey("package-analyzer-test-yes", "test")).thenReturn(activeRule);
+		Mockito.when(activeRules.find(RuleKey.of("package-analyzer-test-no", "test"))).thenReturn(null);
+		Mockito.when(activeRules.find(RuleKey.of("package-analyzer-test-yes", "test"))).thenReturn(activeRule);
 
 		// Model
 		final Model<Location> model = new Model<>();

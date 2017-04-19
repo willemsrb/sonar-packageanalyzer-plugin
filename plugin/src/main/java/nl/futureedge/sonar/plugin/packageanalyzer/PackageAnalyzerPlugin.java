@@ -4,6 +4,7 @@ import org.sonar.api.Plugin;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
+import nl.futureedge.sonar.plugin.packageanalyzer.metrics.PackageAnalyzerComputer;
 import nl.futureedge.sonar.plugin.packageanalyzer.metrics.PackageAnalyzerMetrics;
 import nl.futureedge.sonar.plugin.packageanalyzer.rules.AbstractnessRule;
 import nl.futureedge.sonar.plugin.packageanalyzer.rules.AfferentCouplingRule;
@@ -38,7 +39,7 @@ public final class PackageAnalyzerPlugin implements Plugin {
 				PackageDependencyCyclesRule.class);
 		
 		// Metrics
-		context.addExtension(PackageAnalyzerMetrics.class);
+		context.addExtensions(PackageAnalyzerMetrics.class, PackageAnalyzerComputer.class);
 		
 		// Java
 		context.addExtensions(JavaRules.class, JavaSensor.class);
