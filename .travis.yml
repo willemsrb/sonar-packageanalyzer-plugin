@@ -23,7 +23,7 @@ deploy:
   provider: releases
   api_key: $GITHUB_OAUTH_TOKEN
   file_glob: true
-  file: 'target/sonar-packageanalyzer-plugin-*.jar'
+  file: 'plugin/target/sonar-packageanalyzer-plugin-*.jar'
   skip_cleanup: true
   on:
     tags: true
