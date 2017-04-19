@@ -30,7 +30,7 @@ Reports missing package-info.java files on all classes the in analyzed package.
 
 ## Metrics
 Current supported metrics are:
-- ** Package cycles**
+- **Package cycles**
 Number of elementary package cycles.
 
 ## Languages
