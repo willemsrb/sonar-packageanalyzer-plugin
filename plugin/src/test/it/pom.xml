@@ -7,7 +7,8 @@
   <packaging>jar</packaging>
   <version>1.0</version>
 
-  <name>Test project for Integration Test</name>
+    <name>Package Analyzer - Integration Test</name>
+    <description>Package Analyzer Plugin for SonarQube - Integration Test</description>
 
   <repositories>
     <repository>

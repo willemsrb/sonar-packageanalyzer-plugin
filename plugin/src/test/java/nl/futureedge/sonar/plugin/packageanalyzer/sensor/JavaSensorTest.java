@@ -1,4 +1,4 @@
-package nl.futureedge.sonar.plugin.packageanalyzer;
+package nl.futureedge.sonar.plugin.packageanalyzer.sensor;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,7 +23,6 @@ import org.sonar.api.config.Settings;
 
 import nl.futureedge.sonar.plugin.packageanalyzer.java.JavaClasspathProperties;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Model;
-import nl.futureedge.sonar.plugin.packageanalyzer.model.ModelPrinter;
 import nl.futureedge.sonar.plugin.packageanalyzer.rules.Location;
 import nl.futureedge.sonar.plugin.packageanalyzer.sensor.JavaSensor;
 
@@ -67,7 +66,7 @@ public class JavaSensorTest {
 		@SuppressWarnings("unchecked")
 		final Model<Location> model = (Model<Location>) method.invoke(subject, context);
 
-		ModelPrinter.print(model, System.out);
+		Model.print(model, System.out);
 	}
 
 	

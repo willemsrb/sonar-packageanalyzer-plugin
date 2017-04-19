@@ -31,7 +31,7 @@ public class ModelTest {
 		Class<String> classX = model.addClass(Name.of("nl.futureedge.util.ClassX"), false, "classXExternal");
 		classX.addUsage(Name.of("nl.futureedge.ClassA"));
 
-		ModelPrinter.print(model, System.out);
+		Model.print(model, System.out);
 
 		Assert.assertEquals(4, model.getPackages().size());
 		final Map<String, Package<String>> packages = model.getPackages().stream()

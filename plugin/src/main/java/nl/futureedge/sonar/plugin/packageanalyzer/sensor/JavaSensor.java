@@ -48,7 +48,8 @@ public final class JavaSensor extends AbstractSensor {
 		this.settings = settings;
 	}
 
-	public Model<Location> buildModel(final SensorContext context) {
+	@Override
+	protected Model<Location> buildModel(final SensorContext context) {
 		// Result
 		final Model<Location> model = new Model<>();
 		final ModelCreatingTreeVisitor visitor = new ModelCreatingTreeVisitor(model);

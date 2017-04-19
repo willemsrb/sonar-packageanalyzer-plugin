@@ -1,5 +1,6 @@
 package nl.futureedge.sonar.plugin.packageanalyzer.model;
 
+import java.io.PrintStream;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -84,4 +85,33 @@ public final class Model<E> {
 		return Collections.unmodifiableSet(packages.values().stream().collect(Collectors.toSet()));
 	}
 
+	/**
+	 * Print model to print stream.
+	 * @param model model
+	 * @param out print stream
+	 */
+	public static void print(final Model<?> model, final PrintStream out) {
+		out.println("Model:");
+		for (final Package<?> aPackage : model.getPackages()) {
+			out.println(aPackage);
+			for(final Package<?> usesPackage: aPackage.getPackageUsages()) {
+				out.println(" - uses " + usesPackage);
+			}
+			for(final Package<?> usedByPackage: aPackage.getUsedByPackages()) {
+				out.println(" - used by " + usedByPackage);
+			}
+			
+			for (final Class<?> aClass : aPackage.getClasses()) {
+				out.println(" - " + aClass);
+				
+				for(final Class<?> usesClass : aClass.getUsages()) {
+					out.println("    - uses " + usesClass);
+				}
+				for(final Class<?> usedByClass : aClass.getUsedByClasses()) {
+					out.println("    - used by " + usedByClass);
+				}
+			}
+		}		
+	}	
+	
 }

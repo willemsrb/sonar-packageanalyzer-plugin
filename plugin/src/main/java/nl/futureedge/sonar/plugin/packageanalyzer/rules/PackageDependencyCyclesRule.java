@@ -50,6 +50,7 @@ public class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRule imp
 		// Analyze
 		final Analyzer<Location> analyzer = new Analyzer<>();
 		final List<PackageCycle<Location>> packageCycles = analyzer.findPackageCycles(model);
+		LOGGER.info("Package cycles: {}", packageCycles.size());
 
 		int packageCycleIdentifier = 0;
 
