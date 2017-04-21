@@ -9,14 +9,19 @@ import org.mockito.Mockito;
 import org.sonar.api.batch.rule.ActiveRule;
 import org.sonar.api.batch.sensor.internal.SensorContextTester;
 import org.sonar.api.batch.sensor.issue.Issue;
+import org.sonar.api.config.MapSettings;
+import org.sonar.api.config.PropertyDefinitions;
+import org.sonar.api.config.Settings;
 import org.sonar.api.rule.RuleKey;
 
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Model;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Name;
+import nl.futureedge.sonar.plugin.packageanalyzer.settings.PackageAnalyzerProperties;
 
 public class NumberOfClassesAndInterfacesRuleTest extends BaseRuleTest {
 
-	private NumberOfClassesAndInterfacesRule subject = new NumberOfClassesAndInterfacesRule();
+	private Settings settings = new MapSettings(new PropertyDefinitions(PackageAnalyzerProperties.definitions()));
+	private NumberOfClassesAndInterfacesRule subject = new NumberOfClassesAndInterfacesRule(settings);
 	private SensorContextTester sensorContext = SensorContextTester.create(Paths.get("./src/main/java"));
 	private ActiveRule activeRule = Mockito.mock(ActiveRule.class);
 

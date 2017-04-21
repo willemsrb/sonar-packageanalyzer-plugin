@@ -10,15 +10,20 @@ import org.sonar.api.batch.rule.ActiveRule;
 import org.sonar.api.batch.rule.ActiveRules;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.internal.SensorContextTester;
+import org.sonar.api.config.MapSettings;
+import org.sonar.api.config.PropertyDefinitions;
+import org.sonar.api.config.Settings;
 import org.sonar.api.rule.RuleKey;
 import org.sonar.api.server.rule.RulesDefinition.NewRepository;
 
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Model;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Package;
+import nl.futureedge.sonar.plugin.packageanalyzer.settings.PackageAnalyzerProperties;
 
 public class AbstractPackageAnalyzerRuleTest extends BaseRuleTest {
 
-	private TestRule subject = new TestRule();
+	private Settings settings = new MapSettings(new PropertyDefinitions(PackageAnalyzerProperties.definitions()));
+	private TestRule subject = new TestRule(settings);
 	private SensorContextTester sensorContext = SensorContextTester.create(Paths.get("./src/main/java"));
 	private ActiveRule activeRule = Mockito.mock(ActiveRule.class);
 
@@ -61,8 +66,11 @@ public class AbstractPackageAnalyzerRuleTest extends BaseRuleTest {
 
 	public static final class TestRule extends AbstractPackageAnalyzerRule {
 
-		protected TestRule() {
+		private final Settings settings;
+
+		protected TestRule(Settings settings) {
 			super("test");
+			this.settings = settings;
 		}
 
 		@Override
@@ -73,7 +81,7 @@ public class AbstractPackageAnalyzerRuleTest extends BaseRuleTest {
 		@Override
 		protected void scanModel(SensorContext context, ActiveRule rule, Model<Location> model) {
 			for (Package<Location> modelPackage : model.getPackages()) {
-				registerIssue(context, rule, modelPackage, "Issue");
+				registerIssue(context, settings, rule, modelPackage, modelPackage.getClasses(), "Issue");
 			}
 
 		}

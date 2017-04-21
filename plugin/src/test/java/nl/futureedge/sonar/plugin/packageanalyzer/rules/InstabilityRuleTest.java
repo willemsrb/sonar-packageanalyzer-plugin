@@ -9,15 +9,20 @@ import org.mockito.Mockito;
 import org.sonar.api.batch.rule.ActiveRule;
 import org.sonar.api.batch.sensor.internal.SensorContextTester;
 import org.sonar.api.batch.sensor.issue.Issue;
+import org.sonar.api.config.MapSettings;
+import org.sonar.api.config.PropertyDefinitions;
+import org.sonar.api.config.Settings;
 import org.sonar.api.rule.RuleKey;
 
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Class;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Model;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Name;
+import nl.futureedge.sonar.plugin.packageanalyzer.settings.PackageAnalyzerProperties;
 
 public class InstabilityRuleTest extends BaseRuleTest {
 
-	private InstabilityRule subject = new InstabilityRule();
+	private Settings settings = new MapSettings(new PropertyDefinitions(PackageAnalyzerProperties.definitions()));
+	private InstabilityRule subject = new InstabilityRule(settings);
 	private SensorContextTester sensorContext = SensorContextTester.create(Paths.get("./src/main/java"));
 	private ActiveRule activeRule = Mockito.mock(ActiveRule.class);
 
@@ -37,10 +42,10 @@ public class InstabilityRuleTest extends BaseRuleTest {
 	public void test() {
 		final Model<Location> model = new Model<>();
 		model.addPackage("packageA", location("packageA/package-info.java"));
-		Class<Location> classA = model.addClass(Name.of("packageA.ClassA"), false , null); 
+		Class<Location> classA = model.addClass(Name.of("packageA.ClassA"), false, null);
 		classA.addUsage(Name.of("packageB.ClassA"));
 		model.addPackage("packageB", location("packageB/package-info.java"));
-		Class<Location> classB = model.addClass(Name.of("packageB.ClassA"), false , null); 
+		Class<Location> classB = model.addClass(Name.of("packageB.ClassA"), false, null);
 		classB.addUsage(Name.of("packageC.ClassA"));
 		model.addPackage("packageC", location("packageC/package-info.java"));
 		model.addPackage("packageD", location("packageD/package-info.java"));

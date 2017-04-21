@@ -1,7 +1,11 @@
 package nl.futureedge.sonar.plugin.packageanalyzer.rules;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.sonar.api.batch.rule.ActiveRule;
 import org.sonar.api.batch.sensor.SensorContext;
+import org.sonar.api.config.Settings;
 import org.sonar.api.rule.Severity;
 import org.sonar.api.rules.RuleType;
 import org.sonar.api.server.rule.RuleParamType;
@@ -24,11 +28,14 @@ public class AbstractnessRule extends AbstractPackageAnalyzerRule implements Pac
 	private static final String RULE_KEY = "abstractness";
 	private static final String PARAM_MAXIMUM = "maximum";
 
+	private final Settings settings;
+
 	/**
 	 * Abstractness rule.
 	 */
-	public AbstractnessRule() {
+	public AbstractnessRule(final Settings settings) {
 		super(RULE_KEY);
+		this.settings = settings;
 	}
 
 	@Override
@@ -48,7 +55,9 @@ public class AbstractnessRule extends AbstractPackageAnalyzerRule implements Pac
 		final Integer maximum = Integer.valueOf(rule.param(PARAM_MAXIMUM));
 
 		for (final Package<Location> packageToCheck : model.getPackages()) {
-			final int abstractClasses = (int) packageToCheck.getClasses().stream().filter(Class::isAbstract).count();
+			Set<Class<Location>> classes = packageToCheck.getClasses().stream().filter(Class::isAbstract)
+					.collect(Collectors.toSet());
+			final int abstractClasses = classes.size();
 			final int totalClasses = packageToCheck.getClasses().size();
 			final int abstractness = totalClasses == 0 ? 0 : (abstractClasses * 100 / totalClasses);
 
@@ -56,7 +65,7 @@ public class AbstractnessRule extends AbstractPackageAnalyzerRule implements Pac
 					abstractClasses, totalClasses, abstractness);
 
 			if (abstractness > maximum) {
-				registerIssue(context, rule, packageToCheck,
+				registerIssue(context, settings, rule, packageToCheck, classes,
 						"Reduce number of abstract classes in this package (allowed: " + maximum + "%, actual: "
 								+ abstractness + "%)");
 			}

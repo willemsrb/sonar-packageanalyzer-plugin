@@ -1,7 +1,10 @@
 package nl.futureedge.sonar.plugin.packageanalyzer.rules;
 
+import java.util.Set;
+
 import org.sonar.api.batch.rule.ActiveRule;
 import org.sonar.api.batch.sensor.SensorContext;
+import org.sonar.api.config.Settings;
 import org.sonar.api.rule.Severity;
 import org.sonar.api.rules.RuleType;
 import org.sonar.api.server.rule.RuleParamType;
@@ -10,6 +13,7 @@ import org.sonar.api.server.rule.RulesDefinition.NewRule;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
+import nl.futureedge.sonar.plugin.packageanalyzer.model.Class;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Model;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Package;
 
@@ -23,12 +27,16 @@ public final class InstabilityRule extends AbstractPackageAnalyzerRule implement
 	private static final String RULE_KEY = "instability";
 	private static final String PARAM_MAXIMUM = "maximum";
 
+	private final Settings settings;
+
 	/**
 	 * Instability rule.
 	 */
-	public InstabilityRule() {
+	public InstabilityRule(final Settings settings) {
 		super(RULE_KEY);
+		this.settings = settings;
 	}
+
 
 	@Override
 	public void define(final NewRepository repository) {
@@ -56,7 +64,10 @@ public final class InstabilityRule extends AbstractPackageAnalyzerRule implement
 					efferentCoupling, totalCoupling, instability);
 
 			if (instability > maximum) {
-				registerIssue(context, rule, packageToCheck,
+				// TODO: only select classes that use classes outside this package
+				final Set<Class<Location>> classes = packageToCheck.getClasses();
+
+				registerIssue(context, settings, rule, packageToCheck, classes,
 						"Reduce number of packages used by this package to lower instability (allowed: " + maximum
 								+ "%, actual: " + instability + "%)");
 			}

@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import org.sonar.api.batch.rule.ActiveRule;
 import org.sonar.api.batch.sensor.SensorContext;
+import org.sonar.api.config.Settings;
 import org.sonar.api.rule.Severity;
 import org.sonar.api.rules.RuleType;
 import org.sonar.api.server.rule.RulesDefinition.NewRepository;
@@ -32,12 +33,16 @@ public class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRule imp
 
 	private static final String RULE_KEY = "package-cycle";
 
+	private final Settings settings;
+
 	/**
 	 * Constructor.
 	 */
-	public PackageDependencyCyclesRule() {
+	public PackageDependencyCyclesRule(final Settings settings) {
 		super(RULE_KEY);
-		}
+		this.settings = settings;
+	}
+
 
 	@Override
 	public void define(final NewRepository repository) {
@@ -67,8 +72,12 @@ public class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRule imp
 				}
 				
 				final String message = formatMessage(packageCycle, packageInCycle);
-				registerIssue(context, rule, packageInCycle, message);
-			}
+				
+				// TODO: only select classes that use the 'next' package
+				final Set<Class<Location>> classes = packageInCycle.getClasses();
+				
+				registerIssue(context, settings, rule, packageInCycle, classes, message);
+			} 
 		}
 		
 		// Measures

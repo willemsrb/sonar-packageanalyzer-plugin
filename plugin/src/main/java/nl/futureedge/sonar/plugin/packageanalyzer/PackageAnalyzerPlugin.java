@@ -15,6 +15,7 @@ import nl.futureedge.sonar.plugin.packageanalyzer.rules.MissingPackageInfoRule;
 import nl.futureedge.sonar.plugin.packageanalyzer.rules.NumberOfClassesAndInterfacesRule;
 import nl.futureedge.sonar.plugin.packageanalyzer.rules.PackageDependencyCyclesRule;
 import nl.futureedge.sonar.plugin.packageanalyzer.sensor.JavaSensor;
+import nl.futureedge.sonar.plugin.packageanalyzer.settings.PackageAnalyzerProperties;
 
 /**
  * Package analyzer plugin.
@@ -40,6 +41,9 @@ public final class PackageAnalyzerPlugin implements Plugin {
 		
 		// Metrics
 		context.addExtensions(PackageAnalyzerMetrics.class, PackageAnalyzerComputer.class);
+		
+		// Settings
+		context.addExtensions(PackageAnalyzerProperties.definitions());
 		
 		// Java
 		context.addExtensions(JavaRules.class, JavaSensor.class);

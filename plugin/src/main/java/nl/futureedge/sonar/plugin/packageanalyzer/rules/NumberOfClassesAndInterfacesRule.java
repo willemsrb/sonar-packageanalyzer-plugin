@@ -2,6 +2,7 @@ package nl.futureedge.sonar.plugin.packageanalyzer.rules;
 
 import org.sonar.api.batch.rule.ActiveRule;
 import org.sonar.api.batch.sensor.SensorContext;
+import org.sonar.api.config.Settings;
 import org.sonar.api.rule.Severity;
 import org.sonar.api.rules.RuleType;
 import org.sonar.api.server.rule.RuleParamType;
@@ -23,11 +24,14 @@ public class NumberOfClassesAndInterfacesRule extends AbstractPackageAnalyzerRul
 	private static final String RULE_KEY = "number-of-classes-and-interfaces";
 	private static final String PARAM_MAXIMUM = "maximum";
 
+	private final Settings settings;
+
 	/**
 	 * Constructor.
 	 */
-	public NumberOfClassesAndInterfacesRule() {
+	public NumberOfClassesAndInterfacesRule(final Settings settings) {
 		super(RULE_KEY);
+		this.settings = settings;
 	}
 
 	@Override
@@ -51,7 +55,7 @@ public class NumberOfClassesAndInterfacesRule extends AbstractPackageAnalyzerRul
 			LOGGER.debug("Package {}: total={}", packageToCheck.getName(), classcount);
 
 			if (classcount > maximum) {
-				registerIssue(context, rule, packageToCheck,
+				registerIssue(context, settings, rule, packageToCheck, packageToCheck.getClasses(),
 						"Reduce number of classes in package (allowed: " + maximum + ", actual: " + classcount + ")");
 			}
 		}

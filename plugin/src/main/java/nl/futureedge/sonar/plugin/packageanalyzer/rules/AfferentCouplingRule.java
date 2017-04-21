@@ -1,7 +1,10 @@
 package nl.futureedge.sonar.plugin.packageanalyzer.rules;
 
+import java.util.Set;
+
 import org.sonar.api.batch.rule.ActiveRule;
 import org.sonar.api.batch.sensor.SensorContext;
+import org.sonar.api.config.Settings;
 import org.sonar.api.rule.Severity;
 import org.sonar.api.rules.RuleType;
 import org.sonar.api.server.rule.RuleParamType;
@@ -10,6 +13,7 @@ import org.sonar.api.server.rule.RulesDefinition.NewRule;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
+import nl.futureedge.sonar.plugin.packageanalyzer.model.Class;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Model;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Package;
 
@@ -23,11 +27,14 @@ public class AfferentCouplingRule extends AbstractPackageAnalyzerRule implements
 	private static final String RULE_KEY = "afferent-coupling";
 	private static final String PARAM_MAXIMUM = "maximum";
 
+	private final Settings settings;
+
 	/**
 	 * Afferent coupling rule.
 	 */
-	public AfferentCouplingRule() {
+	public AfferentCouplingRule(final Settings settings) {
 		super(RULE_KEY);
+		this.settings = settings;
 	}
 
 	@Override
@@ -51,7 +58,10 @@ public class AfferentCouplingRule extends AbstractPackageAnalyzerRule implements
 			LOGGER.debug("Package {}: afferent={}", packageToCheck.getName(), afferentCoupling);
 
 			if (afferentCoupling > maximum) {
-				registerIssue(context, rule, packageToCheck,
+				// TODO: only select classes that are used by classes outside this package
+				final Set<Class<Location>> classes = packageToCheck.getClasses();
+				
+				registerIssue(context, settings, rule, packageToCheck, classes,
 						"Reduce number of packages that use this package (allowed: " + maximum + ", actual: "
 								+ afferentCoupling + ")");
 			}

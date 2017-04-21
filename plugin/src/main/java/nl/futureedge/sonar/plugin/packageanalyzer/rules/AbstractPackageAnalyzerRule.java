@@ -1,17 +1,22 @@
 package nl.futureedge.sonar.plugin.packageanalyzer.rules;
 
 import java.io.Serializable;
+import java.util.Set;
 
 import org.sonar.api.batch.rule.ActiveRule;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.issue.NewIssue;
+import org.sonar.api.config.Settings;
 import org.sonar.api.measures.Metric;
 import org.sonar.api.rule.RuleKey;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
+import nl.futureedge.sonar.plugin.packageanalyzer.model.Class;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.External;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Model;
+import nl.futureedge.sonar.plugin.packageanalyzer.model.Package;
+import nl.futureedge.sonar.plugin.packageanalyzer.settings.PackageAnalyzerProperties;
 
 /**
  * Base rule implementation.
@@ -57,15 +62,57 @@ public abstract class AbstractPackageAnalyzerRule implements PackageAnalyzerRule
 	 * @param message
 	 *            message
 	 */
-	protected void registerIssue(SensorContext context, ActiveRule rule, External<Location> model, String message) {
+	protected void registerIssue(SensorContext context, ActiveRule rule, Class<Location> model, String message) {
+		newIssue(context, rule, model, message);
+	}
+
+	private boolean newIssue(SensorContext context, ActiveRule rule, External<Location> model, String message) {
 		final Location location = model.getExternal();
 		if (location == null) {
-			LOGGER.warn("Rule {} triggered, but {} did not contain a location to register issues.", rule.ruleKey(),
-					model);
+			return false;
 		} else {
 			final NewIssue issue = context.newIssue().forRule(rule.ruleKey());
 			issue.at(issue.newLocation().on(location.getOn()).at(location.getAt()).message(message));
 			issue.save();
+			return true;
+		}
+	}
+
+	/**
+	 * Register an issue.
+	 * 
+	 * @param context
+	 *            sensor context
+	 * @param rule
+	 *            rule to register issue for
+	 * @param model
+	 *            object to register issue on (external location)
+	 * @param message
+	 *            message
+	 */
+	protected void registerIssue(SensorContext context, Settings settings, ActiveRule rule,
+			Package<Location> modelPackage, Set<Class<Location>> modelClasses, String message) {
+
+		boolean registered = false;
+		if (PackageAnalyzerProperties.shouldRegisterOnPackage(settings)
+				&& newIssue(context, rule, modelPackage, message)) {
+			registered = true;
+		}
+
+		if (!registered && PackageAnalyzerProperties.shouldRegisterOnClasses(settings) && !modelClasses.isEmpty()) {
+			if (PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings)) {
+				for (Class<Location> modelClass : modelClasses) {
+					newIssue(context, rule, modelClass, message);
+				}
+			} else {
+				newIssue(context, rule, modelClasses.iterator().next(), message);
+			}
+			registered = true;
+		}
+
+		if (!registered) {
+			LOGGER.warn("Rule {} triggered, but {} did not contain a location to register issues.", rule.ruleKey(),
+					modelPackage);
 		}
 	}
 
