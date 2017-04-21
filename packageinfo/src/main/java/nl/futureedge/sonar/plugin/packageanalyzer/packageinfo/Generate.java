@@ -19,7 +19,7 @@ public final class Generate {
 	private static final Pattern PACKAGE_DEFINITION_PATTERN = Pattern.compile("package.*?;");
 	private static final String PACKAGE_INFO = "package-info.java";
 	
-	public static void main(final String[] args) throws IOException {
+	public static void main(final String[] args) {
 		final File baseDirectory = new File(args.length == 0 ? "." : args[0]);
 		if (!baseDirectory.isDirectory()) {
 			LOGGER.log(Level.SEVERE, baseDirectory.getAbsolutePath() + " is not a directory.");
