@@ -80,6 +80,7 @@
         <module>analyzer</module>
         <module>java</module>
         <module>plugin</module>
+        <module>packageinfo</module>
     </modules>
 
     <dependencies>
