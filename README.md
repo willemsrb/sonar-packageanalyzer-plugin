@@ -4,9 +4,6 @@
 This plugin analyzes the package structure of your modules.
 
 ## Rules
-Rule violations are reported on the package definition file (Java: package-info.java)
-
-Current supported rules are:
 - **Abstractness**  
 The ratio of the number of abstract classes (and interfaces) in the analyzed package compared to the total number of classes in the analyze package. The range for this value is 0% to 100%, with A=0% indicating a completely concrete package and A=100% indicating a completely abstract package.
 
@@ -28,12 +25,29 @@ All elementary package cycles are and reported on all packages, along with the c
 - **Missing package-info.java** (java language only)  
 Reports missing package-info.java files on all classes the in analyzed package.
 
+## Issues
+Issues raised by rules can be registered on the following locations:
+- **Package level only**  
+Only registers an issue if a package level component exists (for example: package-info.java for Java projects).
+
+- **Classes level only**  
+Registers the issue on (relevant) classes in the package.
+
+- **Package level, fallback to class level** (default setting)  
+Register an issue on the package level if possible, else register the issue on classes.
+
+When registering an issue on classes the following can be configured:
+- **All classes** (default)
+Register the issue on all (relevant) classes in the package.
+
+- **First class only**
+Register the issue on the first (relevant) class in the package.
+
 ## Metrics
-Current supported metrics are:
 - **Package cycles**  
 Number of elementary package cycles.
 
 ## Languages
-Current supported language are:
-- Java
+- **Java**
+Java is supported through the SonarQube Java Parser (and the SonarQube SSLR)
 
