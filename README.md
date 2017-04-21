@@ -4,6 +4,8 @@
 This plugin analyzes the package structure of your modules.
 
 ## Rules
+Rules are based on the rules defined by the [jDepend](https://github.com/clarkware/jdepend) library.
+
 - **Abstractness**  
 The ratio of the number of abstract classes (and interfaces) in the analyzed package compared to the total number of classes in the analyze package. The range for this value is 0% to 100%, with A=0% indicating a completely concrete package and A=100% indicating a completely abstract package.
 
@@ -20,9 +22,9 @@ The ratio of efferent coupling (Ce) to total coupling (Ce + Ca) such that I = Ce
 The number of concrete and abstract classes (and interfaces) in the package is an indicator of the extensibility of the package.
 
 - **Package cycles**  
-All elementary package cycles are and reported on all packages, along with the classes participating in the package cycle.
+All elementary package cycles are and reported on all particing packages, listing the classes participating in the package cycle. The elementary cycles detection is based on [Donald B. Johnson's algorithm for finding all the elementary circuits of a directed graph](http://www.cs.tufts.edu/comp/150GA/homeworks/hw1/Johnson%2075.PDF).
 
-- **Missing package-info.java** (java language only)  
+- **Missing package-info.java** *(java language only)*  
 Reports missing package-info.java files on all classes the in analyzed package.
 
 ## Issues
@@ -33,11 +35,11 @@ Only registers an issue if a package level component exists (for example: packag
 - **Classes level only**  
 Registers the issue on (relevant) classes in the package.
 
-- **Package level, fallback to class level** (default setting)  
+- **Package level, fallback to class level** *(default setting)*  
 Register an issue on the package level if possible, else register the issue on classes.
 
 When registering an issue on classes the following can be configured:
-- **All classes** (default)
+- **All classes** *(default setting)*  
 Register the issue on all (relevant) classes in the package.
 
 - **First class only**
