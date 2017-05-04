@@ -17,7 +17,7 @@ import nl.futureedge.sonar.plugin.packageanalyzer.model.Package;
 /**
  * Number of classes rule.
  */
-public class NumberOfClassesAndInterfacesRule extends AbstractPackageAnalyzerRule implements PackageAnalyzerRule {
+public final class NumberOfClassesAndInterfacesRule extends AbstractPackageAnalyzerRule implements PackageAnalyzerRule {
 
 	private static final Logger LOGGER = Loggers.get(NumberOfClassesAndInterfacesRule.class);
 

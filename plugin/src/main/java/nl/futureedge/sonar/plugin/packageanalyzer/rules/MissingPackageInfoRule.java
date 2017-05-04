@@ -17,7 +17,7 @@ import nl.futureedge.sonar.plugin.packageanalyzer.model.Package;
  */
 public final class MissingPackageInfoRule extends AbstractPackageAnalyzerRule implements PackageAnalyzerRule {
 
-	private static final Logger LOGGER = Loggers.get(NumberOfClassesAndInterfacesRule.class);
+	private static final Logger LOGGER = Loggers.get(MissingPackageInfoRule.class);
 
 	private static final String RULE_KEY = "missing-package-info";
 
@@ -37,7 +37,7 @@ public final class MissingPackageInfoRule extends AbstractPackageAnalyzerRule im
 	}
 
 	@Override
-	public boolean supportsLanguage(String language) {
+	public boolean supportsLanguage(final String language) {
 		return "java".equals(language);
 	}
 
@@ -45,7 +45,7 @@ public final class MissingPackageInfoRule extends AbstractPackageAnalyzerRule im
 	public void scanModel(final SensorContext context, final ActiveRule rule, final Model<Location> model) {
 		for (final Package<Location> packageToCheck : model.getPackages()) {
 			LOGGER.debug("Package {}: extenal={}", packageToCheck.getExternal());
-			
+
 			if (packageToCheck.getExternal() == null) {
 				for (final Class<Location> classToReport : packageToCheck.getClasses()) {
 					registerIssue(context, rule, classToReport, "Add a package-info.java to the package.");

@@ -3,10 +3,10 @@ package nl.futureedge.sonar.plugin.packageanalyzer.rules;
 /**
  * Java rules definition.
  */
-public class JavaRules extends BaseRules {
+public final class JavaRules extends BaseRules {
 
 	private static final String LANGUAGE = "java";
-	
+
 	/**
 	 * Constructor.
 	 */

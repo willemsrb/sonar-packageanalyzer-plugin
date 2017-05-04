@@ -1,6 +1,9 @@
 package nl.futureedge.sonar.plugin.packageanalyzer.rules;
 
 import java.nio.file.Paths;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -32,14 +35,18 @@ public class EfferentCouplingRuleTest extends BaseRuleTest {
 		Mockito.when(activeRule.ruleKey()).thenReturn(RuleKey.of("testRepo", "testKey"));
 	}
 
-
 	/**
+	 * <p>
 	 * PackageA -> Uses 0 packages -> No issue
+	 * </p>
+	 * <p>
 	 * PackageB -> Uses 1 package -> No issue
+	 * </p>
+	 * <p>
 	 * PackageC -> Uses 2 packages -> Issue
+	 * </p>
 	 */
-	@Test
-	public void test() {
+	private Model<Location> createModel() {
 		final Model<Location> model = new Model<>();
 		model.addPackage("packageA", location("packageA/package-info.java"));
 		model.addClass(Name.of("packageA.ClassA"), true, null);
@@ -51,19 +58,44 @@ public class EfferentCouplingRuleTest extends BaseRuleTest {
 		model.addClass(Name.of("packageB.ClassB"), true, null);
 		model.addClass(Name.of("packageB.ClassC"), false, null);
 		model.addPackage("packageC", location("packageC/package-info.java"));
-		Class<Location> cCA = model.addClass(Name.of("packageC.ClassA"), true, null);
+		final Class<Location> cCA = model.addClass(Name.of("packageC.ClassA"), true, location("packageC/ClassA.java"));
 		cCA.addUsage(Name.of("packageA.ClassA"));
-		cCA.addUsage(Name.of("packageB.ClassA"));
-		model.addClass(Name.of("packageC.ClassB"), true, null);
+		final Class<Location> cCB = model.addClass(Name.of("packageC.ClassB"), true, location("packageC/ClassB.java"));
+		cCB.addUsage(Name.of("packageB.ClassB"));
 		model.addClass(Name.of("packageC.ClassC"), false, null);
-	
+		return model;
+	}
+
+	@Test
+	public void test() {
+		final Model<Location> model = createModel();
 		subject.scanModel(sensorContext, activeRule, model);
 
 		// Check one issue on packageA
 		Assert.assertEquals(1, sensorContext.allIssues().size());
 		final Issue issue = sensorContext.allIssues().iterator().next();
+		final String message = issue.primaryLocation().message();
+		System.out.println("Message: " + message);
 		Assert.assertEquals(BaseRuleTest.PROJECT_KEY + ":packageC/package-info.java",
 				issue.primaryLocation().inputComponent().key());
+		Assert.assertEquals("Reduce number of packages used by this package (allowed: 1, actual: 2)", message);
+	}
+
+	@Test
+	public void testOnClasses() {
+		settings.setProperty(PackageAnalyzerProperties.ISSUE_MODE_KEY, PackageAnalyzerProperties.ISSUE_MODE_CLASS);
+		settings.setProperty(PackageAnalyzerProperties.CLASS_MODE_KEY, PackageAnalyzerProperties.CLASS_MODE_ALL);
+		
+		final Model<Location> model = createModel();
+		subject.scanModel(sensorContext, activeRule, model);
+
+		// Check two issues on packageC
+		Assert.assertEquals(2, sensorContext.allIssues().size());	
+		final Map<String,Issue> issues = sensorContext.allIssues().stream().collect(Collectors.toMap(issue -> issue.primaryLocation().inputComponent().key(),
+                Function.identity()));
+		
+		issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageC/ClassA.java");
+		issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageC/ClassB.java");
 	}
 
 }

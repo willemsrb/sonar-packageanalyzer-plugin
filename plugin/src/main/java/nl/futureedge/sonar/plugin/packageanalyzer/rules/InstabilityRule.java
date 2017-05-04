@@ -37,7 +37,6 @@ public final class InstabilityRule extends AbstractPackageAnalyzerRule implement
 		this.settings = settings;
 	}
 
-
 	@Override
 	public void define(final NewRepository repository) {
 		LOGGER.debug("Defining rule in repostiory {}", repository.key());
@@ -64,8 +63,8 @@ public final class InstabilityRule extends AbstractPackageAnalyzerRule implement
 					efferentCoupling, totalCoupling, instability);
 
 			if (instability > maximum) {
-				// TODO: only select classes that use classes outside this package
-				final Set<Class<Location>> classes = packageToCheck.getClasses();
+				final Set<Class<Location>> classes = EfferentCouplingRule
+						.selectClassesWithEfferentUsage(packageToCheck.getClasses());
 
 				registerIssue(context, settings, rule, packageToCheck, classes,
 						"Reduce number of packages used by this package to lower instability (allowed: " + maximum

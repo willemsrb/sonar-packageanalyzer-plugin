@@ -44,7 +44,7 @@ public class BaseRules implements RulesDefinition {
 	 *            rules definition context
 	 */
 	@Override
-	public void define(final Context context) {
+	public final void define(final Context context) {
 		final NewRepository repository = context.createRepository(getRepositoryKey(language), language).setName(NAME);
 
 		for (final PackageAnalyzerRule rule : rules) {

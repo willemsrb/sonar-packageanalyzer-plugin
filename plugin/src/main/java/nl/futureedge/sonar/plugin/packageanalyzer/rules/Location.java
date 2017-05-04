@@ -10,11 +10,14 @@ public final class Location {
 
 	private final InputComponent on;
 	private final TextRange at;
-	
+
 	/**
 	 * Constructor.
-	 * @param on on input component
-	 * @param at at location in the file
+	 * 
+	 * @param on
+	 *            on input component
+	 * @param at
+	 *            at location in the file
 	 */
 	public Location(final InputComponent on, final TextRange at) {
 		this.on = on;
@@ -28,6 +31,5 @@ public final class Location {
 	public TextRange getAt() {
 		return at;
 	}
-	
-	
+
 }

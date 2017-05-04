@@ -1,6 +1,8 @@
 package nl.futureedge.sonar.plugin.packageanalyzer.rules;
 
+import java.util.HashSet;
 import java.util.Set;
+import java.util.SortedSet;
 
 import org.sonar.api.batch.rule.ActiveRule;
 import org.sonar.api.batch.sensor.SensorContext;
@@ -20,9 +22,9 @@ import nl.futureedge.sonar.plugin.packageanalyzer.model.Package;
 /**
  * Afferent coupling rule.
  */
-public class AfferentCouplingRule extends AbstractPackageAnalyzerRule implements PackageAnalyzerRule {
+public final class AfferentCouplingRule extends AbstractPackageAnalyzerRule implements PackageAnalyzerRule {
 
-	private static final Logger LOGGER = Loggers.get(EfferentCouplingRule.class);
+	private static final Logger LOGGER = Loggers.get(AfferentCouplingRule.class);
 
 	private static final String RULE_KEY = "afferent-coupling";
 	private static final String PARAM_MAXIMUM = "maximum";
@@ -58,13 +60,44 @@ public class AfferentCouplingRule extends AbstractPackageAnalyzerRule implements
 			LOGGER.debug("Package {}: afferent={}", packageToCheck.getName(), afferentCoupling);
 
 			if (afferentCoupling > maximum) {
-				// TODO: only select classes that are used by classes outside this package
-				final Set<Class<Location>> classes = packageToCheck.getClasses();
-				
+				final Set<Class<Location>> classes = selectClassesWithAfferentUsage(packageToCheck.getClasses());
+
 				registerIssue(context, settings, rule, packageToCheck, classes,
 						"Reduce number of packages that use this package (allowed: " + maximum + ", actual: "
 								+ afferentCoupling + ")");
 			}
 		}
+	}
+
+	/**
+	 * Only select classes that are used by classes outside this package.
+	 * 
+	 * @param packageClasses
+	 *            package classes
+	 * @return classes that have afferent usages
+	 */
+	private static Set<Class<Location>> selectClassesWithAfferentUsage(
+			final SortedSet<Class<Location>> packageClasses) {
+		final Set<Class<Location>> result = new HashSet<>();
+
+		for (final Class<Location> packageClass : packageClasses) {
+			if (hasAfferentUsage(packageClass)) {
+				result.add(packageClass);
+			}
+		}
+
+		return result;
+	}
+
+	private static boolean hasAfferentUsage(final Class<Location> packageClass) {
+		final Package<Location> classPackage = packageClass.getParentPackage();
+
+		for (final Class<Location> usedByClass : packageClass.getUsedByClasses()) {
+			if (!classPackage.equals(usedByClass.getParentPackage())) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

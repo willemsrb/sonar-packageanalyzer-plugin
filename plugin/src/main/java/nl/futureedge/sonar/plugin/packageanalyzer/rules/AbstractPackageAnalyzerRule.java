@@ -62,15 +62,20 @@ public abstract class AbstractPackageAnalyzerRule implements PackageAnalyzerRule
 	 * @param message
 	 *            message
 	 */
-	protected void registerIssue(SensorContext context, ActiveRule rule, Class<Location> model, String message) {
+	protected final void registerIssue(final SensorContext context, final ActiveRule rule, final Class<Location> model,
+			final String message) {
 		newIssue(context, rule, model, message);
 	}
 
-	private boolean newIssue(SensorContext context, ActiveRule rule, External<Location> model, String message) {
+	private boolean newIssue(final SensorContext context, final ActiveRule rule, final External<Location> model,
+			final String message) {
 		final Location location = model.getExternal();
 		if (location == null) {
+			LOGGER.debug("Rule {} triggered, but {} did not contain a location to register issue", rule.ruleKey(),
+					model);
 			return false;
 		} else {
+			LOGGER.debug("Rule {} triggered, registering issue on {}", rule.ruleKey(), model);
 			final NewIssue issue = context.newIssue().forRule(rule.ruleKey());
 			issue.at(issue.newLocation().on(location.getOn()).at(location.getAt()).message(message));
 			issue.save();
@@ -90,8 +95,10 @@ public abstract class AbstractPackageAnalyzerRule implements PackageAnalyzerRule
 	 * @param message
 	 *            message
 	 */
-	protected void registerIssue(SensorContext context, Settings settings, ActiveRule rule,
-			Package<Location> modelPackage, Set<Class<Location>> modelClasses, String message) {
+	protected final void registerIssue(final SensorContext context, final Settings settings, final ActiveRule rule,
+			final Package<Location> modelPackage, final Set<Class<Location>> modelClasses, final String message) {
+		LOGGER.debug("registerIssue(context={}, settings={}, rule={}, package={}, classes={}, message={}", context,
+				settings, rule, modelPackage, modelClasses, message);
 
 		boolean registered = false;
 		if (PackageAnalyzerProperties.shouldRegisterOnPackage(settings)
@@ -101,7 +108,7 @@ public abstract class AbstractPackageAnalyzerRule implements PackageAnalyzerRule
 
 		if (!registered && PackageAnalyzerProperties.shouldRegisterOnClasses(settings) && !modelClasses.isEmpty()) {
 			if (PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings)) {
-				for (Class<Location> modelClass : modelClasses) {
+				for (final Class<Location> modelClass : modelClasses) {
 					newIssue(context, rule, modelClass, message);
 				}
 			} else {
@@ -128,8 +135,8 @@ public abstract class AbstractPackageAnalyzerRule implements PackageAnalyzerRule
 	 * @param value
 	 *            value
 	 */
-	protected <T extends Serializable> void registerMeasure(SensorContext context, Metric<T> metric,
-			External<Location> model, T value) {
+	protected final <T extends Serializable> void registerMeasure(final SensorContext context, final Metric<T> metric,
+			final External<Location> model, final T value) {
 		final Location location = model.getExternal();
 		if (location == null) {
 			LOGGER.warn("Measure {} triggered, but {} did not contain a location to register measures.", metric.key(),

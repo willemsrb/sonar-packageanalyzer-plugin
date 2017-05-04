@@ -1,6 +1,9 @@
 package nl.futureedge.sonar.plugin.packageanalyzer.rules;
 
 import java.nio.file.Paths;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -32,24 +35,54 @@ public class NumberOfClassesAndInterfacesRuleTest extends BaseRuleTest {
 	}
 
 	/**
-	 * PackageA -> 3 classes -> Issue PackageB -> 0 classes -> No issue
+	 * <p>
+	 * PackageA -> 3 classes -> Issue
+	 * </p>
+	 * <p>
+	 * PackageB -> 0 classes -> No issue
+	 * </p>
 	 */
-	@Test
-	public void test() {
+	private Model<Location> createModel() {
 		final Model<Location> model = new Model<>();
 		model.addPackage("packageA", location("packageA/package-info.java"));
-		model.addClass(Name.of("packageA.ClassA"), true, null);
+		model.addClass(Name.of("packageA.ClassA"), true, location("packageA/ClassA.java"));
 		model.addClass(Name.of("packageA.ClassB"), true, null);
-		model.addClass(Name.of("packageA.ClassC"), true, null);
+		model.addClass(Name.of("packageA.ClassC"), true, location("packageA/ClassC.java"));
 		model.addPackage("packageB", location("packageB/package-info.java"));
+		return model;
+	}
 
+	@Test
+	public void test() {
+		final Model<Location> model = createModel();
 		subject.scanModel(sensorContext, activeRule, model);
 
 		// Check one issue on packageA
 		Assert.assertEquals(1, sensorContext.allIssues().size());
 		final Issue issue = sensorContext.allIssues().iterator().next();
+		final String message = issue.primaryLocation().message();
+		System.out.println("Message: " + message);
 		Assert.assertEquals(BaseRuleTest.PROJECT_KEY + ":packageA/package-info.java",
 				issue.primaryLocation().inputComponent().key());
+		Assert.assertEquals("Reduce number of classes in package (allowed: 2, actual: 3)", message);
 	}
+	
 
+	@Test
+	public void testOnClasses() {
+		settings.setProperty(PackageAnalyzerProperties.ISSUE_MODE_KEY, PackageAnalyzerProperties.ISSUE_MODE_CLASS);
+		
+		final Model<Location> model = createModel();
+		subject.scanModel(sensorContext, activeRule, model);
+
+
+		// Check two issues on packageA
+		Assert.assertEquals(2, sensorContext.allIssues().size());	
+		Map<String,Issue> issues = sensorContext.allIssues().stream().collect(Collectors.toMap(issue -> issue.primaryLocation().inputComponent().key(),
+                Function.identity()));
+		
+		issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageA/ClassA.java");
+		issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageA/ClassC.java");
+	}
+	
 }

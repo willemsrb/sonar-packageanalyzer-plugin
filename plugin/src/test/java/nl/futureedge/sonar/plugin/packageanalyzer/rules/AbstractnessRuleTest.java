@@ -27,7 +27,12 @@ public class AbstractnessRuleTest extends BaseRuleTest {
 	private AbstractnessRule subject = new AbstractnessRule(settings);
 	private SensorContextTester sensorContext = SensorContextTester.create(Paths.get("./src/main/java"));
 	private ActiveRule activeRule = Mockito.mock(ActiveRule.class);
-	private Model<Location> model = new Model<>();
+
+	@Before
+	public void setup() {
+		Mockito.when(activeRule.param("maximum")).thenReturn("60");
+		Mockito.when(activeRule.ruleKey()).thenReturn(RuleKey.of("testRepo", "testKey"));
+	}
 
 	/**
 	 * <p>
@@ -39,15 +44,12 @@ public class AbstractnessRuleTest extends BaseRuleTest {
 	 * <p>
 	 * PackageC -> 1 abstract from 2 classes -> 50% -> No issue
 	 * </p>
-	  * <p>
+	 * <p>
 	 * PackageD -> 2 abstract from 3 classes -> 66% -> Issue
 	 * </p>
 	 */
-	@Before
-	public void setup() {
-		Mockito.when(activeRule.param("maximum")).thenReturn("60");
-		Mockito.when(activeRule.ruleKey()).thenReturn(RuleKey.of("testRepo", "testKey"));
-
+	private Model<Location> createModel() {
+		final Model<Location> model = new Model<>();
 		model.addPackage("packageA", location("packageA/package-info.java"));
 		model.addClass(Name.of("packageA.ClassA"), true, null);
 		model.addClass(Name.of("packageA.ClassB"), true, null);
@@ -59,49 +61,68 @@ public class AbstractnessRuleTest extends BaseRuleTest {
 		model.addPackage("packageD", null);
 		model.addClass(Name.of("packageD.ClassA"), false, location("packageD/ClassA.java"));
 		model.addClass(Name.of("packageD.ClassB"), true, location("packageD/ClassB.java"));
-		model.addClass(Name.of("packageD.ClassC"), true,location("packageD/ClassC.java"));
+		model.addClass(Name.of("packageD.ClassC"), true, location("packageD/ClassC.java"));
+		return model;
 	}
 
 	@Test
 	public void test() {
+		final Model<Location> model = createModel();
+		subject.scanModel(sensorContext, activeRule, model);
+
+		// Check one issue on packageA
+		Assert.assertEquals(3, sensorContext.allIssues().size());
+		Map<String, Issue> issues = sensorContext.allIssues().stream().collect(
+				Collectors.toMap(issue -> issue.primaryLocation().inputComponent().key(), Function.identity()));
+
+		issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageA/package-info.java");
+		issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageD/ClassB.java");
+		issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageD/ClassC.java");
+	}
+
+	@Test
+	public void testPackage() {
 		settings.setProperty(PackageAnalyzerProperties.ISSUE_MODE_KEY, PackageAnalyzerProperties.ISSUE_MODE_PACKAGE);
+		final Model<Location> model = createModel();
 		subject.scanModel(sensorContext, activeRule, model);
 
 		// Check one issue on packageA
 		Assert.assertEquals(1, sensorContext.allIssues().size());
 		final Issue issue = sensorContext.allIssues().iterator().next();
+		final String message = issue.primaryLocation().message();
+		System.out.println("Message: " + message);
 		Assert.assertEquals(BaseRuleTest.PROJECT_KEY + ":packageA/package-info.java",
 				issue.primaryLocation().inputComponent().key());
+		Assert.assertEquals("Reduce number of abstract classes in this package (allowed: 60%, actual: 100%)", message);
 	}
 
-	@Test
-	public void testFallback() {
-		//settings.setProperty(PackageAnalyzerProperties.ISSUE_MODE_KEY, PackageAnalyzerProperties.ISSUE_MODE_FALLBACK);
-		subject.scanModel(sensorContext, activeRule, model);
-
-		// Check one issue on packageA
-		Assert.assertEquals(3, sensorContext.allIssues().size());	
-		Map<String,Issue> issues = sensorContext.allIssues().stream().collect(Collectors.toMap(issue -> issue.primaryLocation().inputComponent().key(),
-                Function.identity()));
-		
-		issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageA/package-info.java");
-		issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageD/ClassB.java");
-		issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageD/ClassC.java");
-	}
-	
 	@Test
 	public void testClasses() {
 		settings.setProperty(PackageAnalyzerProperties.ISSUE_MODE_KEY, PackageAnalyzerProperties.ISSUE_MODE_CLASS);
-		settings.setProperty(PackageAnalyzerProperties.CLASS_MODE_KEY, PackageAnalyzerProperties.CLASS_MODE_FIRST);
+		final Model<Location> model = createModel();
 		subject.scanModel(sensorContext, activeRule, model);
 
 		// Check one issue on packageA
-		Assert.assertEquals(1, sensorContext.allIssues().size());	
-		Map<String,Issue> issues = sensorContext.allIssues().stream().collect(Collectors.toMap(issue -> issue.primaryLocation().inputComponent().key(),
-                Function.identity()));
-		
-		//issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageA/package-info.java");
+		Assert.assertEquals(2, sensorContext.allIssues().size());
+		Map<String, Issue> issues = sensorContext.allIssues().stream().collect(
+				Collectors.toMap(issue -> issue.primaryLocation().inputComponent().key(), Function.identity()));
+
 		issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageD/ClassB.java");
-		//issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageD/ClassC.java");
+		issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageD/ClassC.java");
+	}
+
+	@Test
+	public void testClassesFirstOnly() {
+		settings.setProperty(PackageAnalyzerProperties.ISSUE_MODE_KEY, PackageAnalyzerProperties.ISSUE_MODE_CLASS);
+		settings.setProperty(PackageAnalyzerProperties.CLASS_MODE_KEY, PackageAnalyzerProperties.CLASS_MODE_FIRST);
+		final Model<Location> model = createModel();
+		subject.scanModel(sensorContext, activeRule, model);
+
+		// Check one issue on packageA
+		Assert.assertEquals(1, sensorContext.allIssues().size());
+		Map<String, Issue> issues = sensorContext.allIssues().stream().collect(
+				Collectors.toMap(issue -> issue.primaryLocation().inputComponent().key(), Function.identity()));
+
+		issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageD/ClassB.java");
 	}
 }

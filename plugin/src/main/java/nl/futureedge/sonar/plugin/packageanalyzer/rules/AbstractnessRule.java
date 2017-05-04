@@ -21,9 +21,9 @@ import nl.futureedge.sonar.plugin.packageanalyzer.model.Package;
 /**
  * Abstractness rule.
  */
-public class AbstractnessRule extends AbstractPackageAnalyzerRule implements PackageAnalyzerRule {
+public final class AbstractnessRule extends AbstractPackageAnalyzerRule implements PackageAnalyzerRule {
 
-	private static final Logger LOGGER = Loggers.get(InstabilityRule.class);
+	private static final Logger LOGGER = Loggers.get(AbstractnessRule.class);
 
 	private static final String RULE_KEY = "abstractness";
 	private static final String PARAM_MAXIMUM = "maximum";
@@ -55,7 +55,7 @@ public class AbstractnessRule extends AbstractPackageAnalyzerRule implements Pac
 		final Integer maximum = Integer.valueOf(rule.param(PARAM_MAXIMUM));
 
 		for (final Package<Location> packageToCheck : model.getPackages()) {
-			Set<Class<Location>> classes = packageToCheck.getClasses().stream().filter(Class::isAbstract)
+			final Set<Class<Location>> classes = packageToCheck.getClasses().stream().filter(Class::isAbstract)
 					.collect(Collectors.toSet());
 			final int abstractClasses = classes.size();
 			final int totalClasses = packageToCheck.getClasses().size();

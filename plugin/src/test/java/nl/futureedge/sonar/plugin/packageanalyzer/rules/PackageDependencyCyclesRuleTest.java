@@ -38,28 +38,55 @@ public class PackageDependencyCyclesRuleTest extends BaseRuleTest {
 
 	@Test
 	public void test() {
+		final Model<Location> model = createModel();
+
+		subject.scanModel(sensorContext, activeRule, model);
+
+		// Check one issue on packageA (no location on any part of packageB)
+		Assert.assertEquals(1, sensorContext.allIssues().size());
+		final Issue issue = sensorContext.allIssues().iterator().next();
+		String message = issue.primaryLocation().message();
+		System.out.println("Message: " + message);
+		Assert.assertEquals(BaseRuleTest.PROJECT_KEY + ":packageA/package-info.java",
+				issue.primaryLocation().inputComponent().key());
+		Assert.assertEquals("Break the package cycle containing the following cycle of packages: packageA (ClassA references classC, classD, classE, classX, ClassB references classB, ClassC references classB, ClassD references classC), packageB (ClassA references classA)", message);
+	}
+
+	private Model<Location> createModel() {
 		final Model<Location> model = new Model<>();
 		model.addPackage("packageA", location("packageA/package-info.java"));
-		model.addClass(Name.of("packageA.ClassB"), true, null).addUsage(Name.of("packageB.classB"));
+		model.addClass(Name.of("packageA.ClassB"), true, location("packageA/ClassB.java")).addUsage(Name.of("packageB.classB"));
 		model.addClass(Name.of("packageA.ClassD"), true, null).addUsage(Name.of("packageB.classC"));
 		Class<Location> classAA = model.addClass(Name.of("packageA.ClassA"), true, null);
 		classAA.addUsage(Name.of("packageB.classD"));
 		classAA.addUsage(Name.of("packageB.classC"));
 		classAA.addUsage(Name.of("packageB.classE"));
 		classAA.addUsage(Name.of("packageB.classX"));
-		model.addClass(Name.of("packageA.ClassC"), true, null).addUsage(Name.of("packageB.classB"));
+		model.addClass(Name.of("packageA.ClassC"), true, location("packageA/ClassC.java")).addUsage(Name.of("packageB.classB"));
+		model.addClass(Name.of("packageA.ClassE"), true, location("packageA/ClassE.java")).addUsage(Name.of("packageA.classA"));
 		model.addClass(Name.of("packageB.ClassA"), true, null).addUsage(Name.of("packageA.classA"));
-
+		
+		return model;
+	}
+	
+	@Test
+	public void testOnClasses() {
+		settings.setProperty(PackageAnalyzerProperties.ISSUE_MODE_KEY, PackageAnalyzerProperties.ISSUE_MODE_CLASS);
+		
+		final Model<Location> model = createModel();
 		subject.scanModel(sensorContext, activeRule, model);
 
-		// Check one issue on packageA
-		Assert.assertEquals(1, sensorContext.allIssues().size());
-		final Issue issue = sensorContext.allIssues().iterator().next();
-		System.out.println("Message: " + issue.primaryLocation().message());
-		Assert.assertEquals(BaseRuleTest.PROJECT_KEY + ":packageA/package-info.java",
-				issue.primaryLocation().inputComponent().key());
-	}
 
+		// Check two issues on packageA
+		Assert.assertEquals(2, sensorContext.allIssues().size());	
+		Map<String,Issue> issues = sensorContext.allIssues().stream().collect(Collectors.toMap(issue -> issue.primaryLocation().inputComponent().key(),
+                Function.identity()));
+		
+		issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageA/ClassB.java");
+		issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageA/ClassC.java");
+	}
+	
+	
 
 	@Test
 	public void testMultiple() {

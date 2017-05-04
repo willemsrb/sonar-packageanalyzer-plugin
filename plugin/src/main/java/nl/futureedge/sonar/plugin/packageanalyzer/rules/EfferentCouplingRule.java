@@ -1,6 +1,8 @@
 package nl.futureedge.sonar.plugin.packageanalyzer.rules;
 
+import java.util.HashSet;
 import java.util.Set;
+import java.util.SortedSet;
 
 import org.sonar.api.batch.rule.ActiveRule;
 import org.sonar.api.batch.sensor.SensorContext;
@@ -59,13 +61,43 @@ public final class EfferentCouplingRule extends AbstractPackageAnalyzerRule impl
 			LOGGER.debug("Package {}: efferent={}", packageToCheck.getName(), efferentCoupling);
 
 			if (efferentCoupling > maximum) {
-				// TODO: only select classes that use classes outside this package
-				final Set<Class<Location>> classes = packageToCheck.getClasses();
+				final Set<Class<Location>> classes = selectClassesWithEfferentUsage(packageToCheck.getClasses());
 
 				registerIssue(context, settings, rule, packageToCheck, classes,
 						"Reduce number of packages used by this package (allowed: " + maximum + ", actual: "
 								+ efferentCoupling + ")");
 			}
 		}
+	}
+
+	/**
+	 * Only select classes that are usee classes outside this package.
+	 * 
+	 * @param packageClasses
+	 *            package classes
+	 * @return classes that have efferent usages
+	 */
+	static Set<Class<Location>> selectClassesWithEfferentUsage(final SortedSet<Class<Location>> packageClasses) {
+		final Set<Class<Location>> result = new HashSet<>();
+
+		for (final Class<Location> packageClass : packageClasses) {
+			if (hasAfferentUsage(packageClass)) {
+				result.add(packageClass);
+			}
+		}
+
+		return result;
+	}
+
+	private static boolean hasAfferentUsage(final Class<Location> packageClass) {
+		final Package<Location> classPackage = packageClass.getParentPackage();
+
+		for (final Class<Location> usesClass : packageClass.getUsages()) {
+			if (!classPackage.equals(usesClass.getParentPackage())) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

@@ -33,16 +33,22 @@ public class AfferentCouplingRuleTest extends BaseRuleTest {
 	}
 
 	/**
-	 * PackageA -> Used by 2 packages -> Issue PackageB -> Used by 1 package ->
-	 * No issue PackageC -> Used by 0 packages -> No issue
+	 * <p>
+	 * PackageA -> Used by 2 packages -> Issue
+	 * </p>
+	 * <p>
+	 * PackageB -> Used by 1 package -> No issue
+	 * </p>
+	 * <p>
+	 * PackageC -> Used by 0 packages -> No issue
+	 * </p>
 	 */
-	@Test
-	public void test() {
+	private Model<Location> createModel() {
 		final Model<Location> model = new Model<>();
 		model.addPackage("packageA", location("packageA/package-info.java"));
-		model.addClass(Name.of("packageA.ClassA"), true, null);
-		model.addClass(Name.of("packageA.ClassB"), true, null);
-		model.addClass(Name.of("packageA.ClassC"), true, null);
+		model.addClass(Name.of("packageA.ClassA"), true, location("packageA/ClassA.java"));
+		model.addClass(Name.of("packageA.ClassB"), true, location("packageA/ClassB.java"));
+		model.addClass(Name.of("packageA.ClassC"), true, location("packageA/ClassC.java"));
 		model.addPackage("packageB", location("packageB/package-info.java"));
 		Class<Location> cBA = model.addClass(Name.of("packageB.ClassA"), true, null);
 		cBA.addUsage(Name.of("packageA.ClassA"));
@@ -54,13 +60,36 @@ public class AfferentCouplingRuleTest extends BaseRuleTest {
 		cCA.addUsage(Name.of("packageB.ClassA"));
 		model.addClass(Name.of("packageC.ClassB"), true, null);
 		model.addClass(Name.of("packageC.ClassC"), false, null);
+		return model;
+	}
 
+	@Test
+	public void test() {
+		final Model<Location> model = createModel();
 		subject.scanModel(sensorContext, activeRule, model);
 
 		// Check one issue on packageA
 		Assert.assertEquals(1, sensorContext.allIssues().size());
 		final Issue issue = sensorContext.allIssues().iterator().next();
+		final String message = issue.primaryLocation().message();
+		System.out.println("Message: " + message);
 		Assert.assertEquals(BaseRuleTest.PROJECT_KEY + ":packageA/package-info.java",
+				issue.primaryLocation().inputComponent().key());
+		Assert.assertEquals("Reduce number of packages that use this package (allowed: 1, actual: 2)", message);
+	}
+
+	@Test
+	public void testClasses() {
+		settings.setProperty(PackageAnalyzerProperties.ISSUE_MODE_KEY, PackageAnalyzerProperties.ISSUE_MODE_CLASS);
+		settings.setProperty(PackageAnalyzerProperties.CLASS_MODE_KEY, PackageAnalyzerProperties.CLASS_MODE_ALL);
+
+		final Model<Location> model = createModel();
+		subject.scanModel(sensorContext, activeRule, model);
+
+		// Check one issue on packageA
+		Assert.assertEquals(1, sensorContext.allIssues().size());
+		final Issue issue = sensorContext.allIssues().iterator().next();
+		Assert.assertEquals(BaseRuleTest.PROJECT_KEY + ":packageA/ClassA.java",
 				issue.primaryLocation().inputComponent().key());
 	}
 
