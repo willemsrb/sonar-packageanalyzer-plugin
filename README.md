@@ -1,7 +1,7 @@
 # Package analyzer plugin for SonarQube [![Build Status](https://travis-ci.org/willemsrb/sonar-packageanalyzer-plugin.svg?branch=master)](https://travis-ci.org/willemsrb/sonar-packageanalyzer-plugin) [![Quality Gate](https://sonarqube.com/api/badges/gate?key=nl.future-edge.sonarqube.plugins:sonar-packageanalyzer)](https://sonarqube.com/dashboard/index?id=nl.future-edge.sonarqube.plugins%3Asonar-packageanalyzer)
 *Requires SonarQube 6.3*
 
-This plugin analyzes the package structure of your modules.
+This plugin analyzes and checks the package structure of your modules.
 
 ## Rules
 Rules are based on the rules defined by the [jDepend](https://github.com/clarkware/jdepend) library.
@@ -42,14 +42,14 @@ When registering an issue on classes the following can be configured:
 - **All classes** *(default setting)*  
 Register the issue on all (relevant) classes in the package.
 
-- **First class only**
+- **First class only**  
 Register the issue on the first (relevant) class in the package.
 
 ## Metrics
-- **Package cycles** (Complexity measures) 
+- **Package cycles** (Complexity measures)  
 Number of elementary package cycles.
 
 ## Languages
-- **Java**
+- **Java**  
 Java is supported through the SonarQube Java Parser (and the SonarQube SSLR)
 
