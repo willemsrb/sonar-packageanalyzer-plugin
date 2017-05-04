@@ -10,14 +10,12 @@ import org.sonar.api.ce.measure.MeasureComputer;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
-import nl.futureedge.sonar.plugin.packageanalyzer.rules.NumberOfClassesAndInterfacesRule;
-
 /**
  * Metrics computer.
  */
 public final class PackageAnalyzerComputer implements MeasureComputer {
 
-	private static final Logger LOGGER = Loggers.get(NumberOfClassesAndInterfacesRule.class);
+	private static final Logger LOGGER = Loggers.get(PackageAnalyzerComputer.class);
 
 	@Override
 	public MeasureComputerDefinition define(final MeasureComputerDefinitionContext definitionContext) {
@@ -53,18 +51,17 @@ public final class PackageAnalyzerComputer implements MeasureComputer {
 			addIdentifiers(identifiers, childMeasure);
 		}
 
-		String result = identifiers.stream().collect(Collectors.joining(","));
+		final String result = identifiers.stream().collect(Collectors.joining(","));
 		LOGGER.debug("Result: {}", result);
 		// Set measure
 		context.addMeasure(PackageAnalyzerMetrics.PACKAGE_DEPENDENCY_CYCLES_IDENTIFIERS.key(), result);
 	}
 
-	private void addIdentifiers(Set<String> identifiers, Measure measure) {
+	private void addIdentifiers(final Set<String> identifiers, final Measure measure) {
 		if (measure != null && !"".equals(measure.getStringValue())) {
 			final String[] childIdentifiers = measure.getStringValue().split(",");
 			identifiers.addAll(Arrays.asList(childIdentifiers));
 		}
-
 	}
 
 	private void countIdentifiers(final MeasureComputerContext context) {

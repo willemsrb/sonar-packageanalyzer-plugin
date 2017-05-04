@@ -11,7 +11,7 @@ import org.sonar.api.measures.Metrics;
 /**
  * Metrics definition.
  */
-public class PackageAnalyzerMetrics implements Metrics {
+public final class PackageAnalyzerMetrics implements Metrics {
 
 	/** Metric for package dependency cycles. */
 	public static final Metric<Integer> PACKAGE_DEPENDENCY_CYCLES = new Metric.Builder("package-dependency-cycles",

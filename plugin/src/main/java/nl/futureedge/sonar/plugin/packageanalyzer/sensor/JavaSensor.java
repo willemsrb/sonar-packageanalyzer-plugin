@@ -76,7 +76,7 @@ public final class JavaSensor extends AbstractSensor {
 				LOGGER.debug("Reading model ...");
 				tree.accept(visitor);
 
-			} catch (IOException e) {
+			} catch (final IOException e) {
 				LOGGER.warn("Could not read contents for {}", file.relativePath(), e);
 			}
 		}
