@@ -46,7 +46,8 @@ Register the issue on all (relevant) classes in the package.
 Register the issue on the first (relevant) class in the package.
 
 ## Metrics
-- **Package cycles** (Complexity measures)  
+Metrics are added to the 'Complexity' measures.
+- **Package cycles**  
 Number of elementary package cycles.
 
 ## Languages
