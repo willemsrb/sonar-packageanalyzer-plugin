@@ -126,7 +126,7 @@ public final class JavaSensor extends AbstractSensor {
 			} else {
 				LOGGER.debug("Identifier {}", tree);
 				final Symbol symbol = tree.symbol();
-				if (!symbol.isUnknown()) {
+				if (!symbol.isUnknown() && symbol.isTypeSymbol()) {
 					final String fqn = symbol.type().fullyQualifiedName();
 					LOGGER.debug("Adding class usage {}", fqn);
 					modelClass.addUsage(Name.of(fqn));
