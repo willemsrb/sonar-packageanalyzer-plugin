@@ -15,6 +15,7 @@ import org.sonar.api.server.rule.RulesDefinition.NewRule;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
+import nl.futureedge.sonar.plugin.packageanalyzer.settings.PackageAnalyzerProperties;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Class;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Model;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Package;
@@ -42,10 +43,16 @@ public final class AfferentCouplingRule extends AbstractPackageAnalyzerRule impl
 	@Override
 	public void define(final NewRepository repository) {
 		LOGGER.debug("Defining rule in repostiory {}", repository.key());
-		final NewRule afferentCouplingsRule = repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL)
+		final NewRule afferentCouplingRule = repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL)
 				.setSeverity(Severity.MAJOR).setName("Afferent Coupling").setHtmlDescription(
 						"The number of other packages that depend upon classes within the package is an indicator of the package's responsibility.");
-		afferentCouplingsRule.createParam(PARAM_MAXIMUM).setName(PARAM_MAXIMUM)
+		//Remediation times
+		if(PackageAnalyzerProperties.shouldRegisterOnClasses(settings) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
+				afferentCouplingRule.setDebtRemediationFunction(afferentCouplingRule.debtRemediationFunctions().constantPerIssue("15min"));
+			else afferentCouplingRule.setDebtRemediationFunction(afferentCouplingRule.debtRemediationFunctions().linearWithOffset("7min", "1h"));
+			afferentCouplingRule.setGapDescription("for each class inside the package.");
+		//The number of classes in other packages that depend upon classes within the package
+		afferentCouplingRule.createParam(PARAM_MAXIMUM).setName(PARAM_MAXIMUM)
 				.setDescription("Maximum number of other packages allowed to depend upon classes within the package")
 				.setType(RuleParamType.INTEGER).setDefaultValue("25");
 	}

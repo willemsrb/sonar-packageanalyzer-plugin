@@ -11,6 +11,7 @@ import org.sonar.api.server.rule.RulesDefinition.NewRule;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
+import nl.futureedge.sonar.plugin.packageanalyzer.settings.PackageAnalyzerProperties;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Model;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Package;
 
@@ -40,6 +41,12 @@ public final class NumberOfClassesAndInterfacesRule extends AbstractPackageAnaly
 		final NewRule numberOfClassesAndInterfacesRule = repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL)
 				.setSeverity(Severity.MAJOR).setName("Number of Classes and Interfaces").setHtmlDescription(
 						"The number of concrete and abstract classes (and interfaces) in the package is an indicator of the extensibility of the package.");
+		//Remediation times
+		if(PackageAnalyzerProperties.shouldRegisterOnClasses(settings) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
+				numberOfClassesAndInterfacesRule.setDebtRemediationFunction(numberOfClassesAndInterfacesRule.debtRemediationFunctions().constantPerIssue("3min"));
+			else numberOfClassesAndInterfacesRule.setDebtRemediationFunction(numberOfClassesAndInterfacesRule.debtRemediationFunctions().constantPerIssue("3h"));
+			numberOfClassesAndInterfacesRule.setGapDescription("for each class inside the package.");
+		//Maximum number of classes and interfaces in a package
 		numberOfClassesAndInterfacesRule.createParam(PARAM_MAXIMUM).setName(PARAM_MAXIMUM)
 				.setDescription("Maximum number of classes and interfaces allowed in the package")
 				.setType(RuleParamType.INTEGER).setDefaultValue("50");

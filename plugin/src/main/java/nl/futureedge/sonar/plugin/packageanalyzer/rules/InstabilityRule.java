@@ -13,6 +13,7 @@ import org.sonar.api.server.rule.RulesDefinition.NewRule;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
+import nl.futureedge.sonar.plugin.packageanalyzer.settings.PackageAnalyzerProperties;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Class;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Model;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Package;
@@ -44,6 +45,12 @@ public final class InstabilityRule extends AbstractPackageAnalyzerRule implement
 				.setSeverity(Severity.MAJOR).setName("Instability").setHtmlDescription(
 						"The ratio of efferent coupling (Ce) to total coupling (Ce + Ca) such that I = Ce / (Ce + Ca). This metric is an indicator of the package's resilience to change.<br/>"
 								+ "The range for this metric is 0 to 100%, with I=0% indicating a completely stable package and I=100% indicating a completely instable package.");
+		//Remediation times
+		if(PackageAnalyzerProperties.shouldRegisterOnClasses(settings) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
+				instabilityRule.setDebtRemediationFunction(instabilityRule.debtRemediationFunctions().constantPerIssue("15min"));
+			else instabilityRule.setDebtRemediationFunction(instabilityRule.debtRemediationFunctions().linearWithOffset("7min", "1h"));
+			instabilityRule.setGapDescription("for each class inside the package.");
+		//Maximum instability allowed in a package	
 		instabilityRule.createParam(PARAM_MAXIMUM).setName(PARAM_MAXIMUM)
 				.setDescription("Maximum instability (%) of a package allowed").setType(RuleParamType.INTEGER)
 				.setDefaultValue("75");

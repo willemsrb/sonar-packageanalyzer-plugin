@@ -64,11 +64,10 @@ public abstract class AbstractPackageAnalyzerRule implements PackageAnalyzerRule
 	 */
 	protected final void registerIssue(final SensorContext context, final ActiveRule rule, final Class<Location> model,
 			final String message) {
-		newIssue(context, rule, model, message);
+		newIssue(context, rule, model, model.getParentPackage().getClasses().size(), message);
 	}
 
-	private boolean newIssue(final SensorContext context, final ActiveRule rule, final External<Location> model,
-			final String message) {
+	private boolean newIssue(final SensorContext context, final ActiveRule rule, final External<Location> model, double gap, final String message) {
 		final Location location = model.getExternal();
 		if (location == null) {
 			LOGGER.debug("Rule {} triggered, but {} did not contain a location to register issue", rule.ruleKey(),
@@ -78,6 +77,8 @@ public abstract class AbstractPackageAnalyzerRule implements PackageAnalyzerRule
 			LOGGER.debug("Rule {} triggered, registering issue on {}", rule.ruleKey(), model);
 			final NewIssue issue = context.newIssue().forRule(rule.ruleKey());
 			issue.at(issue.newLocation().on(location.getOn()).at(location.getAt()).message(message));
+			//adding gap factor for remediation time
+			issue.gap(gap);
 			issue.save();
 			return true;
 		}
@@ -102,18 +103,16 @@ public abstract class AbstractPackageAnalyzerRule implements PackageAnalyzerRule
 
 		boolean registered = false;
 		if (PackageAnalyzerProperties.shouldRegisterOnPackage(settings)
-				&& newIssue(context, rule, modelPackage, message)) {
+				&& newIssue(context, rule, modelPackage, modelClasses.size(), message)) {
 			registered = true;
 		}
 
 		if (!registered && PackageAnalyzerProperties.shouldRegisterOnClasses(settings) && !modelClasses.isEmpty()) {
 			if (PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings)) {
-				for (final Class<Location> modelClass : modelClasses) {
-					newIssue(context, rule, modelClass, message);
-				}
-			} else {
-				newIssue(context, rule, modelClasses.iterator().next(), message);
-			}
+				for (final Class<Location> modelClass : modelClasses)
+					newIssue(context, rule, modelClass, 0, message); //Remediation times on all classes have constant values
+			} else 
+				newIssue(context, rule, modelClasses.iterator().next(), modelClasses.size(), message);
 			registered = true;
 		}
 
@@ -121,6 +120,27 @@ public abstract class AbstractPackageAnalyzerRule implements PackageAnalyzerRule
 			LOGGER.warn("Rule {} triggered, but {} did not contain a location to register issues.", rule.ruleKey(),
 					modelPackage);
 		}
+	}
+	
+	/**
+	 * Register an issue.
+	 * 
+	 * @param context
+	 *            sensor context
+	 * @param rule
+	 *            rule to register issue for
+	 * @param model
+	 *            object to register issue on (external location)
+	 * @param cycleSize
+	 *			  number of packages in the cycle, used to calculate remediation time
+	 * @param message
+	 *            message
+	 */
+	protected final void registerIssue(final SensorContext context, final Settings settings, final ActiveRule rule,
+			final Package<Location> modelPackage, final int cycleSize, final String message) {
+		LOGGER.debug("registerIssue(context={}, settings={}, rule={}, package={}, cycleSize={}, message={}", context, 
+			settings, rule, modelPackage, cycleSize, message);
+		newIssue(context, rule, modelPackage, cycleSize, message);
 	}
 
 	/**

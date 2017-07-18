@@ -14,6 +14,7 @@ import org.sonar.api.server.rule.RulesDefinition.NewRule;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
+import nl.futureedge.sonar.plugin.packageanalyzer.settings.PackageAnalyzerProperties;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Class;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Model;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Package;
@@ -45,6 +46,12 @@ public final class AbstractnessRule extends AbstractPackageAnalyzerRule implemen
 				.setSeverity(Severity.MAJOR).setName("Abstractness").setHtmlDescription(
 						"The ratio of the number of abstract classes (and interfaces) in the analyzed package compared to the total number of classes in the analyzed package.<br/>"
 								+ "The range for this metric is 0% to 100%, with A=0% indicating a completely concrete package and A=100% indicating a completely abstract package.");
+		//Remediation times
+		if(PackageAnalyzerProperties.shouldRegisterOnClasses(settings) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
+				abstractnessRule.setDebtRemediationFunction(abstractnessRule.debtRemediationFunctions().constantPerIssue("15min"));
+			else abstractnessRule.setDebtRemediationFunction(abstractnessRule.debtRemediationFunctions().linearWithOffset("7min", "1h"));
+			abstractnessRule.setGapDescription("for each class inside the package.");
+		//Maximum abstractness allowed in a package	
 		abstractnessRule.createParam(PARAM_MAXIMUM).setName(PARAM_MAXIMUM)
 				.setDescription("Maximum abstractness of a package allowed").setType(RuleParamType.INTEGER)
 				.setDefaultValue("75");
