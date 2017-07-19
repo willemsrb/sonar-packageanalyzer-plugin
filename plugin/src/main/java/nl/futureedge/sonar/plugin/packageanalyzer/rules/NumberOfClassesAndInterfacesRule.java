@@ -44,7 +44,7 @@ public final class NumberOfClassesAndInterfacesRule extends AbstractPackageAnaly
 		//Remediation times
 		if(PackageAnalyzerProperties.shouldRegisterOnClasses(settings) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
 				numberOfClassesAndInterfacesRule.setDebtRemediationFunction(numberOfClassesAndInterfacesRule.debtRemediationFunctions().constantPerIssue("3min"));
-			else numberOfClassesAndInterfacesRule.setDebtRemediationFunction(numberOfClassesAndInterfacesRule.debtRemediationFunctions().constantPerIssue("3h"));
+			else numberOfClassesAndInterfacesRule.setDebtRemediationFunction(numberOfClassesAndInterfacesRule.debtRemediationFunctions().linearWithOffset("2min", "1h"));
 			numberOfClassesAndInterfacesRule.setGapDescription("for each class inside the package.");
 		//Maximum number of classes and interfaces in a package
 		numberOfClassesAndInterfacesRule.createParam(PARAM_MAXIMUM).setName(PARAM_MAXIMUM)
