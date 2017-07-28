@@ -42,18 +42,22 @@ public final class InstabilityRule extends AbstractPackageAnalyzerRule implement
 	public void define(final NewRepository repository) {
 		LOGGER.debug("Defining rule in repostiory {}", repository.key());
 		final NewRule instabilityRule = repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL)
-				.setSeverity(Severity.MAJOR).setName("Instability").setHtmlDescription(
+				.setSeverity(Severity.MAJOR).setName("Instability").setGapDescription("for each class inside the package.").setHtmlDescription(
 						"The ratio of efferent coupling (Ce) to total coupling (Ce + Ca) such that I = Ce / (Ce + Ca). This metric is an indicator of the package's resilience to change.<br/>"
 								+ "The range for this metric is 0 to 100%, with I=0% indicating a completely stable package and I=100% indicating a completely instable package.");
-		//Remediation times
-		if(PackageAnalyzerProperties.shouldRegisterOnClasses(settings) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
-				instabilityRule.setDebtRemediationFunction(instabilityRule.debtRemediationFunctions().constantPerIssue("15min"));
-			else instabilityRule.setDebtRemediationFunction(instabilityRule.debtRemediationFunctions().linearWithOffset("7min", "1h"));
-			instabilityRule.setGapDescription("for each class inside the package.");
 		//Maximum instability allowed in a package	
 		instabilityRule.createParam(PARAM_MAXIMUM).setName(PARAM_MAXIMUM)
-				.setDescription("Maximum instability (%) of a package allowed").setType(RuleParamType.INTEGER)
-				.setDefaultValue("75");
+			.setDescription("Maximum instability (%) of a package allowed").setType(RuleParamType.INTEGER)
+			.setDefaultValue("75");
+		
+		defineRemediationTimes(instabilityRule);
+	}
+	
+	@Override
+	public void defineRemediationTimes(final NewRule rule) {
+		if(!PackageAnalyzerProperties.shouldRegisterOnPackage(settings) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
+			rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("12min", "0min"));
+		else rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("5min", "45min"));
 	}
 
 	@Override

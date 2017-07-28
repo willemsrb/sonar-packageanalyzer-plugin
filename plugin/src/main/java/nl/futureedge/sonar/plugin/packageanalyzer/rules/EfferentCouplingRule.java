@@ -44,20 +44,23 @@ public final class EfferentCouplingRule extends AbstractPackageAnalyzerRule impl
 	public void define(final NewRepository repository) {
 		LOGGER.debug("Defining rule in repostiory {}", repository.key());
 		final NewRule efferentCouplingRule = repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL)
-				.setSeverity(Severity.MAJOR).setName("Efferent Coupling").setHtmlDescription(
+				.setSeverity(Severity.MAJOR).setGapDescription("for each class inside the package.").setName("Efferent Coupling").setHtmlDescription(
 						"The number of other packages that the classes in the package depend upon is an indicator of the package's independence.");
-		//Remediation times
-		if(PackageAnalyzerProperties.shouldRegisterOnClasses(settings) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
-				efferentCouplingRule.setDebtRemediationFunction(efferentCouplingRule.debtRemediationFunctions().constantPerIssue("15min"));
-			else efferentCouplingRule.setDebtRemediationFunction(efferentCouplingRule.debtRemediationFunctions().linearWithOffset("7min", "1h"));
-			efferentCouplingRule.setGapDescription("for each class inside the package.");
 		//The number of classes in other packages that the classes in a package depend upon
 		efferentCouplingRule.createParam(PARAM_MAXIMUM).setName(PARAM_MAXIMUM)
-				.setDescription(
-						"Maximum number of other packages that the classes in the package are allowed to depend upon")
+				.setDescription("Maximum number of other packages that the classes in the package are allowed to depend upon")
 				.setType(RuleParamType.INTEGER).setDefaultValue("25");
+		
+		defineRemediationTimes(efferentCouplingRule);
 	}
 
+	@Override
+	public void defineRemediationTimes(final NewRule rule) {
+		if(!PackageAnalyzerProperties.shouldRegisterOnPackage(settings) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
+			rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("12min", "0min"));
+		else rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("5min", "45min"));
+	}
+	
 	@Override
 	public void scanModel(final SensorContext context, final ActiveRule rule, final Model<Location> model) {
 		final Integer maximum = Integer.valueOf(rule.param(PARAM_MAXIMUM));

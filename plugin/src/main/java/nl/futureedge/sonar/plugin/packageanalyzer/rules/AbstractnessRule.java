@@ -43,18 +43,22 @@ public final class AbstractnessRule extends AbstractPackageAnalyzerRule implemen
 	public void define(final NewRepository repository) {
 		LOGGER.debug("Defining rule in repostiory {}", repository.key());
 		final NewRule abstractnessRule = repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL)
-				.setSeverity(Severity.MAJOR).setName("Abstractness").setHtmlDescription(
+				.setSeverity(Severity.MAJOR).setGapDescription("for each class inside the package.").setName("Abstractness").setHtmlDescription(
 						"The ratio of the number of abstract classes (and interfaces) in the analyzed package compared to the total number of classes in the analyzed package.<br/>"
 								+ "The range for this metric is 0% to 100%, with A=0% indicating a completely concrete package and A=100% indicating a completely abstract package.");
-		//Remediation times
-		if(PackageAnalyzerProperties.shouldRegisterOnClasses(settings) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
-				abstractnessRule.setDebtRemediationFunction(abstractnessRule.debtRemediationFunctions().constantPerIssue("15min"));
-			else abstractnessRule.setDebtRemediationFunction(abstractnessRule.debtRemediationFunctions().linearWithOffset("7min", "1h"));
-			abstractnessRule.setGapDescription("for each class inside the package.");
 		//Maximum abstractness allowed in a package	
 		abstractnessRule.createParam(PARAM_MAXIMUM).setName(PARAM_MAXIMUM)
-				.setDescription("Maximum abstractness of a package allowed").setType(RuleParamType.INTEGER)
-				.setDefaultValue("75");
+			.setDescription("Maximum abstractness of a package allowed").setType(RuleParamType.INTEGER)
+			.setDefaultValue("75");
+		
+		defineRemediationTimes(abstractnessRule);
+	}
+	
+	@Override
+	public void defineRemediationTimes(final NewRule rule) {
+		if(!PackageAnalyzerProperties.shouldRegisterOnPackage(settings) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
+			rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("12min", "0min"));
+		else rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("5min", "45min"));
 	}
 
 	@Override

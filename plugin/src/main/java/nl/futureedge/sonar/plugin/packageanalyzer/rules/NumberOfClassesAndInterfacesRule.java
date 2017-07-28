@@ -39,17 +39,21 @@ public final class NumberOfClassesAndInterfacesRule extends AbstractPackageAnaly
 	public void define(final NewRepository repository) {
 		LOGGER.debug("Defining rule in repostiory {}", repository.key());
 		final NewRule numberOfClassesAndInterfacesRule = repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL)
-				.setSeverity(Severity.MAJOR).setName("Number of Classes and Interfaces").setHtmlDescription(
+				.setSeverity(Severity.MAJOR).setGapDescription("for each class inside the package.").setName("Number of Classes and Interfaces").setHtmlDescription(
 						"The number of concrete and abstract classes (and interfaces) in the package is an indicator of the extensibility of the package.");
-		//Remediation times
-		if(PackageAnalyzerProperties.shouldRegisterOnClasses(settings) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
-				numberOfClassesAndInterfacesRule.setDebtRemediationFunction(numberOfClassesAndInterfacesRule.debtRemediationFunctions().constantPerIssue("3min"));
-			else numberOfClassesAndInterfacesRule.setDebtRemediationFunction(numberOfClassesAndInterfacesRule.debtRemediationFunctions().linearWithOffset("2min", "1h"));
-			numberOfClassesAndInterfacesRule.setGapDescription("for each class inside the package.");
 		//Maximum number of classes and interfaces in a package
 		numberOfClassesAndInterfacesRule.createParam(PARAM_MAXIMUM).setName(PARAM_MAXIMUM)
 				.setDescription("Maximum number of classes and interfaces allowed in the package")
 				.setType(RuleParamType.INTEGER).setDefaultValue("50");
+		
+		defineRemediationTimes(numberOfClassesAndInterfacesRule);
+	}
+	
+	@Override
+	public void defineRemediationTimes(final NewRule rule) {
+		if(!PackageAnalyzerProperties.shouldRegisterOnPackage(settings) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
+			rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("3min", "0min"));
+		else rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("2min", "58min"));
 	}
 
 	@Override

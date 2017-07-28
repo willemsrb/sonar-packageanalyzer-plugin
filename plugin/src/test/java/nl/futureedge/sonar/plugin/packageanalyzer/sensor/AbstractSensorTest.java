@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.batch.sensor.internal.DefaultSensorDescriptor;
 import org.sonar.api.server.rule.RulesDefinition.NewRepository;
+import org.sonar.api.server.rule.RulesDefinition.NewRule;
 
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Model;
 import nl.futureedge.sonar.plugin.packageanalyzer.rules.Location;
@@ -65,6 +66,11 @@ public class AbstractSensorTest {
 			// Unused
 		}
 
+		@Override
+		public void defineRemediationTimes(NewRule rule) {
+			// Unused
+		}
+		
 		@Override
 		public void scanModel(SensorContext context, String language, Model<Location> model) {
 			called = true;

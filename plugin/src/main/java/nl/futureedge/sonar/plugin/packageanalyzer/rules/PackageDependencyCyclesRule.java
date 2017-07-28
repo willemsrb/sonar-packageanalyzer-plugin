@@ -54,12 +54,11 @@ public final class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRu
 		defineRemediationTimes(packageDependencyCyclesRule);
 	}
 	
-	private void defineRemediationTimes(final NewRule rule) {
+	@Override
+	public void defineRemediationTimes(final NewRule rule) {		
 		if(PackageAnalyzerProperties.shouldRegisterOnPackage(settings) && !PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
-			rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("30min", "150min"));
-		else if(PackageAnalyzerProperties.shouldRegisterOnClasses(settings) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
-			rule.setDebtRemediationFunction(rule.debtRemediationFunctions().constantPerIssue("20min"));
-		else rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("10min", "40min"));
+			rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("40min", "10min"));
+		else rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("15min", "5min"));
 	}
 
 	@Override
@@ -76,7 +75,8 @@ public final class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRu
 		for (final PackageCycle<Location> packageCycle : packageCycles) {
 			packageCycleIdentifier++;
 			
-			boolean oneRegistered = false; // Used to register issue on the first package available, avoiding redundant issues
+			boolean onlyFirstPackage = true; // Allows registering only on the first package of the cycle 
+			boolean finished = false; // True if all issues for the current cycle are reported
 			final List<Package<Location>> packagesInCycle = packageCycle.getPackagesInCycle();
 			final int cycleSize = packagesInCycle.size(); // Number of packages in each cycle
 			for (int packageInCycleIndex = 0; packageInCycleIndex < cycleSize; packageInCycleIndex++) {
@@ -95,18 +95,26 @@ public final class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRu
 
 				// Only select classes that use the 'next' package
 				final Set<Class<Location>> classes = selectClasses(packageInCycle.getClasses(), nextPackageInCycle);
-
+				
 				//Number of issues registered depending on the server settings
-				if(PackageAnalyzerProperties.shouldRegisterOnPackage(settings) && !PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings) 
-					&& !oneRegistered && (packageInCycle.getExternal() != null)) {
-					registerIssue(context, settings, rule, packageInCycle, cycleSize, message);
-					oneRegistered = true;
+				if(onlyFirstPackage && !finished && packageInCycle.getExternal() != null && 
+						PackageAnalyzerProperties.shouldRegisterOnPackage(settings) && !PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings)) {
+					registerIssue(context, settings, rule, packageInCycle, cycleSize, message); // Single issue in the first package of the cycle
+					finished = true;
 				}
-				else if(!oneRegistered) 
-					registerIssue(context, settings, rule, packageInCycle, classes, message);
+				else if(!finished) {
+					if(PackageAnalyzerProperties.shouldRegisterOnFallback(settings) && 
+							!PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings)) {
+						registerIssue(context, rule, classes.iterator().next(), message); // Fallback - Issues on the first class of each package in the cycle
+						onlyFirstPackage = false;
+					}
+					else {
+						registerIssue(context, settings, rule, packageInCycle, classes, message);
+						if(packageInCycle.getExternal() != null) onlyFirstPackage = false;
+					}
+				}
 			}
 		}
-
 		// Measures
 		for (final Map.Entry<Package<Location>, StringBuilder> measure : identifierMeasures.entrySet()) {
 			registerMeasure(context, PackageAnalyzerMetrics.PACKAGE_DEPENDENCY_CYCLES_IDENTIFIER, measure.getKey(),

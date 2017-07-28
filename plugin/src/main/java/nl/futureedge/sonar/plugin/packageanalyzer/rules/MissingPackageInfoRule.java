@@ -5,6 +5,7 @@ import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.rule.Severity;
 import org.sonar.api.rules.RuleType;
 import org.sonar.api.server.rule.RulesDefinition.NewRepository;
+import org.sonar.api.server.rule.RulesDefinition.NewRule;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
@@ -34,6 +35,11 @@ public final class MissingPackageInfoRule extends AbstractPackageAnalyzerRule im
 		repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL).setSeverity(Severity.BLOCKER)
 				.setName("Missing package-info.java").setHtmlDescription(
 						"When a package-info.java file is missing, no issues can be reported on the package level.");
+	}
+	
+	@Override
+	public void defineRemediationTimes(NewRule rule) {
+		// Unused
 	}
 
 	@Override

@@ -64,7 +64,9 @@ public abstract class AbstractPackageAnalyzerRule implements PackageAnalyzerRule
 	 */
 	protected final void registerIssue(final SensorContext context, final ActiveRule rule, final Class<Location> model,
 			final String message) {
-		newIssue(context, rule, model, model.getParentPackage().getClasses().size(), message);
+		if(rule.ruleKey().toString().equals("package-analyzer-java:package-cycle"))
+			newIssue(context, rule, model, 0, message);
+		else newIssue(context, rule, model, model.getParentPackage().getClasses().size() + 1, message);
 	}
 
 	private boolean newIssue(final SensorContext context, final ActiveRule rule, final External<Location> model, double gap, final String message) {
@@ -77,9 +79,7 @@ public abstract class AbstractPackageAnalyzerRule implements PackageAnalyzerRule
 			LOGGER.debug("Rule {} triggered, registering issue on {}", rule.ruleKey(), model);
 			final NewIssue issue = context.newIssue().forRule(rule.ruleKey());
 			issue.at(issue.newLocation().on(location.getOn()).at(location.getAt()).message(message));
-			//adding gap factor for remediation time
-			issue.gap(gap);
-			issue.save();
+			issue.gap(gap).save(); //adding gap to remediation times
 			return true;
 		}
 	}
@@ -102,20 +102,26 @@ public abstract class AbstractPackageAnalyzerRule implements PackageAnalyzerRule
 				settings, rule, modelPackage, modelClasses, message);
 
 		boolean registered = false;
-		if (PackageAnalyzerProperties.shouldRegisterOnPackage(settings)
-				&& newIssue(context, rule, modelPackage, modelClasses.size(), message)) {
-			registered = true;
+		final Class<Location> firstClass = (!modelClasses.isEmpty()) ? modelClasses.iterator().next() : null;
+		
+		if (PackageAnalyzerProperties.shouldRegisterOnFallback(settings)) {
+			if (!PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings) && modelPackage.getExternal() == null)
+				newIssue(context, rule, firstClass, 0, message); // Fallback register to first class of the package
+		 	else if (!newIssue(context, rule, modelPackage, modelClasses.size() + 1, message)) {
+		 		for (final Class<Location> modelClass : modelClasses)
+		 			newIssue(context, rule, modelClass, 0, message); // Fallback register to all classes affected
+		 	}
+		registered = true;
 		}
-
-		if (!registered && PackageAnalyzerProperties.shouldRegisterOnClasses(settings) && !modelClasses.isEmpty()) {
+		else if (!registered && PackageAnalyzerProperties.shouldRegisterOnPackage(settings) && newIssue(context, rule, modelPackage, modelClasses.size() + 1, message))
+			registered = true; // Package level without fallback		
+		else if (!registered && PackageAnalyzerProperties.shouldRegisterOnClasses(settings) && !modelClasses.isEmpty()) {
 			if (PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings)) {
 				for (final Class<Location> modelClass : modelClasses)
-					newIssue(context, rule, modelClass, 0, message); //Remediation times on all classes have constant values
-			} else 
-				newIssue(context, rule, modelClasses.iterator().next(), modelClasses.size(), message);
+					newIssue(context, rule, modelClass, 0, message); // Register on all classes
+			} else newIssue(context, rule, firstClass, modelClasses.size() + 1, message); // Register on the first class
 			registered = true;
 		}
-
 		if (!registered) {
 			LOGGER.warn("Rule {} triggered, but {} did not contain a location to register issues.", rule.ruleKey(),
 					modelPackage);
@@ -140,7 +146,7 @@ public abstract class AbstractPackageAnalyzerRule implements PackageAnalyzerRule
 			final Package<Location> modelPackage, final int cycleSize, final String message) {
 		LOGGER.debug("registerIssue(context={}, settings={}, rule={}, package={}, cycleSize={}, message={}", context, 
 			settings, rule, modelPackage, cycleSize, message);
-		newIssue(context, rule, modelPackage, cycleSize, message);
+		newIssue(context, rule, modelPackage, cycleSize + 1, message);
 	}
 
 	/**
