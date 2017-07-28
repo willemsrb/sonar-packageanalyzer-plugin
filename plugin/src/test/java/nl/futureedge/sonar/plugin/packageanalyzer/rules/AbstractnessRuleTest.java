@@ -1,7 +1,6 @@
 package nl.futureedge.sonar.plugin.packageanalyzer.rules;
 
 import java.nio.file.Paths;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -70,9 +69,7 @@ public class AbstractnessRuleTest extends BaseRuleTest {
 	public void test() {
 		final Model<Location> model = createModel();
 		subject.scanModel(sensorContext, activeRule, model);
-
-		for (Iterator<Issue> iter = sensorContext.allIssues().iterator(); iter.hasNext();)
-			System.out.println("ISSUE REPORTED: " + iter.next());
+		
 		// Check one issue on packageA
 		Assert.assertEquals(3, sensorContext.allIssues().size());
 		Map<String, Issue> issues = sensorContext.allIssues().stream().collect(
