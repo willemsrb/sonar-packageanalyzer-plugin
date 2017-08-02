@@ -1,6 +1,7 @@
 package nl.futureedge.sonar.plugin.packageanalyzer.rules;
 
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -69,6 +70,21 @@ public class PackageDependencyCyclesRuleTest extends BaseRuleTest {
 		return model;
 	}
 	
+	private Model<Location> createFallbackModel() {
+		final Model<Location> model = new Model<>();
+		model.addPackage("packageA", null);
+		model.addClass(Name.of("packageA.ClassA"), false, location("packageA/ClassA.java")).addUsage(Name.of("packageB.ClassA"));
+		model.addClass(Name.of("packageA.ClassB"), false, location("packageA/ClassB.java")).addUsage(Name.of("packageB.ClassB"));
+		model.addPackage("packageB", null);
+		model.addClass(Name.of("packageB.ClassA"), false, location("packageB/ClassA.java")).addUsage(Name.of("packageC.ClassA"));
+		model.addClass(Name.of("packageB.ClassB"), false, location("packageB/ClassB.java")).addUsage(Name.of("packageA.ClassB"));
+		model.addPackage("packageC", null);
+		model.addClass(Name.of("packageC.ClassA"), false, location("packageC/ClassA.java")).addUsage(Name.of("packageB.ClassA"));
+		model.addClass(Name.of("packageC.ClassA"), false, location("packageC/ClassA.java")).addUsage(Name.of("packageA.ClassB"));
+		
+		return model;
+	}
+	
 	@Test
 	public void testOnClasses() {
 		settings.setProperty(PackageAnalyzerProperties.ISSUE_MODE_KEY, PackageAnalyzerProperties.ISSUE_MODE_CLASS);
@@ -111,6 +127,60 @@ public class PackageDependencyCyclesRuleTest extends BaseRuleTest {
 		Assert.assertEquals("1,2,3,4", sensorContext.measure(BaseRuleTest.PROJECT_KEY + ":packageB/package-info.java", PackageAnalyzerMetrics.PACKAGE_DEPENDENCY_CYCLES_IDENTIFIER).value());
 		Assert.assertEquals("2,3,4,5", sensorContext.measure(BaseRuleTest.PROJECT_KEY + ":packageC/package-info.java", PackageAnalyzerMetrics.PACKAGE_DEPENDENCY_CYCLES_IDENTIFIER).value());
 			
+	}
+	
+	
+	@Test
+	public void testFallbackPackageAll() {
+		settings.setProperty(PackageAnalyzerProperties.ISSUE_MODE_KEY, PackageAnalyzerProperties.ISSUE_MODE_FALLBACK);
+		settings.setProperty(PackageAnalyzerProperties.CLASS_MODE_KEY, PackageAnalyzerProperties.CLASS_MODE_ALL);
+		
+		final Model<Location> model = createFallbackModel();	
+		subject.scanModel(sensorContext, activeRule, model);
+		
+		//Instead of 7 issues (one for each package involved in a cycle), since no package location is available,
+		//there should be 9 issues (all classes affected of each package)
+		Assert.assertEquals(9, sensorContext.allIssues().size());
+		
+		final Map<Issue, String> issues = sensorContext.allIssues().stream().collect(
+				Collectors.toMap(Function.identity(), issue -> issue.primaryLocation().inputComponent().key()));
+		// There should be 2 issues associated with these classes
+		Assert.assertEquals(2, Collections.frequency(issues.values(), BaseRuleTest.PROJECT_KEY + ":packageA/ClassA.java"));
+		Assert.assertEquals(2, Collections.frequency(issues.values(), BaseRuleTest.PROJECT_KEY + ":packageA/ClassB.java"));
+		Assert.assertEquals(2, Collections.frequency(issues.values(), BaseRuleTest.PROJECT_KEY + ":packageB/ClassA.java"));
+		Assert.assertEquals(2, Collections.frequency(issues.values(), BaseRuleTest.PROJECT_KEY + ":packageC/ClassA.java"));
+		// There should be 1 issue associated with this class
+		Assert.assertEquals(1, Collections.frequency(issues.values(), BaseRuleTest.PROJECT_KEY + ":packageB/ClassB.java"));
+		// This class should not have any issue associated
+		Assert.assertFalse(issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageC/ClassB.java"));
+		
+	}
+	
+	@Test
+	public void testFallbackPackageFirst() {
+		settings.setProperty(PackageAnalyzerProperties.ISSUE_MODE_KEY, PackageAnalyzerProperties.ISSUE_MODE_FALLBACK);
+		settings.setProperty(PackageAnalyzerProperties.CLASS_MODE_KEY, PackageAnalyzerProperties.CLASS_MODE_FIRST);
+		
+		final Model<Location> model = createFallbackModel();
+		
+		subject.scanModel(sensorContext, activeRule, model);
+		
+		// Instead of 3 issues (one for each cycle), since no package location is available,
+		//there should be 7 issues (one for each package of each cycle)
+		Assert.assertEquals(7, sensorContext.allIssues().size());
+		
+		final Map<Issue, String> issues = sensorContext.allIssues().stream().collect(
+				Collectors.toMap(Function.identity(), issue -> issue.primaryLocation().inputComponent().key()));
+		// There should be 2 issues associated with these classes
+		Assert.assertEquals(2, Collections.frequency(issues.values(), BaseRuleTest.PROJECT_KEY + ":packageB/ClassA.java"));
+		Assert.assertEquals(2, Collections.frequency(issues.values(), BaseRuleTest.PROJECT_KEY + ":packageA/ClassB.java"));
+		Assert.assertEquals(2, Collections.frequency(issues.values(), BaseRuleTest.PROJECT_KEY + ":packageC/ClassA.java"));
+		// There should be 1 issue associated with this class
+		Assert.assertEquals(1, Collections.frequency(issues.values(), BaseRuleTest.PROJECT_KEY + ":packageB/ClassB.java"));
+		// These classes should not have any issue associated
+		Assert.assertFalse(issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageA/ClassA.java"));
+		Assert.assertFalse(issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageC/ClassB.java"));
+		
 	}
 	
 }

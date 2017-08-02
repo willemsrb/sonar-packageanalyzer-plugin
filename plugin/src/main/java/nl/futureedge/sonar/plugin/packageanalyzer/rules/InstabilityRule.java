@@ -65,13 +65,7 @@ public final class InstabilityRule extends AbstractPackageAnalyzerRule implement
 		final Integer maximum = Integer.valueOf(rule.param(PARAM_MAXIMUM));
 
 		for (final Package<Location> packageToCheck : model.getPackages()) {
-			final int afferentCoupling = packageToCheck.getUsedByPackages().size();
-			final int efferentCoupling = packageToCheck.getPackageUsages().size();
-			final int totalCoupling = efferentCoupling + afferentCoupling;
-			final int instability = totalCoupling == 0 ? 0 : (efferentCoupling * 100) / totalCoupling;
-
-			LOGGER.debug("Package {}: efferent={}, total={}, instability={}", packageToCheck.getName(),
-					efferentCoupling, totalCoupling, instability);
+			final int instability = calcInstability(packageToCheck);
 
 			if (instability > maximum) {
 				final Set<Class<Location>> classes = EfferentCouplingRule
@@ -82,5 +76,16 @@ public final class InstabilityRule extends AbstractPackageAnalyzerRule implement
 								+ "%, actual: " + instability + "%)");
 			}
 		}
+	}
+	
+	protected static int calcInstability(final Package<Location> packageToCheck) {
+		final int afferentCoupling = packageToCheck.getUsedByPackages().size();
+		final int efferentCoupling = packageToCheck.getPackageUsages().size();
+		final int totalCoupling = efferentCoupling + afferentCoupling;
+		final int instability = totalCoupling == 0 ? 0 : (efferentCoupling * 100) / totalCoupling;
+		LOGGER.debug("Package {}: efferent={}, total={}, instability={}", packageToCheck.getName(),
+					efferentCoupling, totalCoupling, instability);
+		
+		return instability;
 	}
 }

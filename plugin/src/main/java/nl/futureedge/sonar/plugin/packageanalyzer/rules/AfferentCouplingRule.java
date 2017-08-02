@@ -87,7 +87,7 @@ public final class AfferentCouplingRule extends AbstractPackageAnalyzerRule impl
 	 *            package classes
 	 * @return classes that have afferent usages
 	 */
-	private static Set<Class<Location>> selectClassesWithAfferentUsage(
+	protected static Set<Class<Location>> selectClassesWithAfferentUsage(
 			final SortedSet<Class<Location>> packageClasses) {
 		final Set<Class<Location>> result = new HashSet<>();
 
