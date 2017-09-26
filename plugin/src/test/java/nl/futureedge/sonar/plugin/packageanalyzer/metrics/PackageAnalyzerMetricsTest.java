@@ -7,7 +7,7 @@ public class PackageAnalyzerMetricsTest {
 
 	@Test
 	public void test() {
-		Assert.assertEquals(3,  new PackageAnalyzerMetrics().getMetrics().size());
+		Assert.assertEquals(6,  new PackageAnalyzerMetrics().getMetrics().size());
 	}
 	
 }

@@ -28,37 +28,27 @@ public final class UnstableDependencyRule extends AbstractPackageAnalyzerRule im
 	private static final String RULE_KEY = "UnstableDependency";
 	private static final String PARAM_MAXIMUM = "maximum";
 
-	private final Settings settings;
-
 	/**
 	 * Unstable Dependency rule.
 	 */
 	public UnstableDependencyRule(final Settings settings) {
-		super(RULE_KEY);
-		this.settings = settings;
+		super(RULE_KEY, settings);
 	}
 
 	@Override
 	public void define(final NewRepository repository) {
 		LOGGER.debug("Defining rule in repository {}", repository.key());
 		final NewRule unstableDependencyRule = repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL)
-				.setSeverity(Severity.MAJOR).setName("Unstable Dependency").setGapDescription("for each class inside the package.")
+				.setSeverity(Severity.MAJOR).setName("Unstable Dependency").setGapDescription("for each related class inside the package.")
 				.setHtmlDescription("Stable-dependencies principle states that if a package "
 				+ "references another that is more likely to change and therefore less stable, there is a great chance that "
 				+ "this package also needs to be updated. This rule describes a package that depends on other packages that are less stable than itself.");
 		//Maximum unstableDependenciesRatio allowed in a package	
 		unstableDependencyRule.createParam(PARAM_MAXIMUM).setName(PARAM_MAXIMUM)
 				.setDescription("Maximum ratio(%) between unstable dependencies and total dependencies to other packages allowed").setType(RuleParamType.INTEGER)
-				.setDefaultValue("30");
+				.setDefaultValue("20");
 				
 		defineRemediationTimes(unstableDependencyRule);
-	}
-	
-	@Override
-	public void defineRemediationTimes(final NewRule rule) {
-		if(!PackageAnalyzerProperties.shouldRegisterOnPackage(settings) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
-			rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("12min", "0min"));
-		else rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("5min", "45min"));
 	}
 
 	@Override
@@ -75,7 +65,7 @@ public final class UnstableDependencyRule extends AbstractPackageAnalyzerRule im
 			int unstableDependencies = 0;
 			for (final Package<Location> packageToCompare : afferentPackages) {
 				final int inst = InstabilityRule.calcInstability(packageToCompare);
-				if (instability < inst) 
+				if (instability > inst) 
 					unstableDependencies++;
 			}
 			
@@ -84,7 +74,7 @@ public final class UnstableDependencyRule extends AbstractPackageAnalyzerRule im
 				LOGGER.debug("Package with unstableDependencies {}: totalCoupling={}, unstableDependencies={}, unstableDependenciesRatio={}%", 
 					packageToCheck.getName(), totalCoupling, unstableDependencies, unstableDependenciesRatio);
 				final Set<Class<Location>> classes = AfferentCouplingRule.selectClassesWithAfferentUsage(packageToCheck.getClasses());
-				registerIssue(context, settings, rule, packageToCheck, classes, 
+				registerIssue(context, getSettings(), rule, packageToCheck, classes, 
 					"The ratio between unstable dependencies and the total number of dependencies is too high (allowed: " +
 					maximum + "%, actual: " + unstableDependenciesRatio + "%)");
 			}

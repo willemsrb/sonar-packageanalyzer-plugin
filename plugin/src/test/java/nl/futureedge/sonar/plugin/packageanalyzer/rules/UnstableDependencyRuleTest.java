@@ -31,26 +31,26 @@ public class UnstableDependencyRuleTest extends BaseRuleTest {
 
 	@Before
 	public void setup() {
-		Mockito.when(activeRule.param("maximum")).thenReturn("30");
+		Mockito.when(activeRule.param("maximum")).thenReturn("20");
 		Mockito.when(activeRule.ruleKey()).thenReturn(RuleKey.of("testRepo", "testKey"));
 	}
 	
 	/**
 	 * <p>
-	 * Package A: Instability: 2/5 -> 40%, Unstable dependencies from other packages: 3,
-	 * Unstable Dependency Ratio: 2/5 -> 40% -> Issue
+	 * Package A: Instability: 2/5 -> 40%, Unstable dependencies from other packages: 0,
+	 * Unstable Dependency Ratio: 0/5 -> 0% -> No Issue
 	 * </p>
 	 * <p>
-	 * Package B: Instability: 1/3 -> 33%, Unstable dependencies from other packages: 1,
-	 * Unstable Dependency Ratio: 2/3 -> 66% -> Issue
+	 * Package B: Instability: 2/4 -> 50%, Unstable dependencies from other packages: 1,
+	 * Unstable Dependency Ratio: 1/4 -> 25% -> Issue
 	 * </p>
 	 * <p>
 	 * Package C: Instability: 2/4 -> 50%, Unstable dependencies from other packages: 1,
-	 * Unstable Dependency Ratio: 1/4 -> 25% -> No Issue
+	 * Unstable Dependency Ratio: 1/4 -> 25% -> Issue
 	 * </p>
 	 * <p>
-	 * Package D: Instability: 3/4 -> 75%, Unstable dependencies from other packages: 0,
-	 * Unstable Dependency Ratio: 0/4 -> 0% -> No Issue
+	 * Package D: Instability: 3/5 -> 60%, Unstable dependencies from other packages: 2,
+	 * Unstable Dependency Ratio: 2/5 -> 40% -> Issue
 	 * </p>
 	 */
 	private Model<Location> createModel() {
@@ -63,7 +63,8 @@ public class UnstableDependencyRuleTest extends BaseRuleTest {
 		
 		model.addPackage("packageB", location("packageB/package-info.java"));
 		final Class<Location> cAB = model.addClass(Name.of("packageB.ClassA"), false, location("packageB/ClassA.java"));
-		cAB.addUsage(Name.of("packageA.ClassA")); //1 efferent package, 2 afferent packages
+		cAB.addUsage(Name.of("packageA.ClassA")); //2 efferent package, 2 afferent packages
+		cAB.addUsage(Name.of("packageD.ClassA"));
 		
 		model.addPackage("packageC", location("packageC/package-info.java"));
 		final Class<Location> cAC = model.addClass(Name.of("packageC.ClassA"), false, location("packageC/ClassA.java"));
@@ -85,13 +86,14 @@ public class UnstableDependencyRuleTest extends BaseRuleTest {
 		final Model<Location> model = createModel();
 		subject.scanModel(sensorContext, activeRule, model);
 		
-		//2 Issues reported on package A and B
-		Assert.assertEquals(2, sensorContext.allIssues().size());
+		//3 Issues reported on packages B, C and D
+		Assert.assertEquals(3, sensorContext.allIssues().size());
 		final Map<String, Issue> issues = sensorContext.allIssues().stream().collect(
 				Collectors.toMap(issue -> issue.primaryLocation().inputComponent().key(), Function.identity()));
-		Assert.assertTrue("Issue was not reported on package A", issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageA/package-info.java"));
 		Assert.assertTrue("Issue was not reported on package B", issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageB/package-info.java"));
-		
+		Assert.assertTrue("Issue was not reported on package C", issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageC/package-info.java"));
+		Assert.assertTrue("Issue was not reported on package D", issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageD/package-info.java"));
+
 	}
 	
 	@Test
@@ -100,13 +102,13 @@ public class UnstableDependencyRuleTest extends BaseRuleTest {
 		final Model<Location> model = createModel();
 		subject.scanModel(sensorContext, activeRule, model);
 		
-		//3 Issues reported - 2 classes on package A, and 1 class on package B
+		//3 Issues reported - There are just 3 afferent classes on the affected packages
 		Assert.assertEquals(3, sensorContext.allIssues().size());
 		final Map<String, Issue> issues = sensorContext.allIssues().stream().collect(
 				Collectors.toMap(issue -> issue.primaryLocation().inputComponent().key(), Function.identity()));
-		Assert.assertTrue("Issue was not reported on package A class A", issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageA/ClassA.java"));
-		Assert.assertTrue("Issue was not reported on package A class B", issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageA/ClassB.java"));
 		Assert.assertTrue("Issue was not reported on package B class A", issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageB/ClassA.java"));
+		Assert.assertTrue("Issue was not reported on package C class A", issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageC/ClassA.java"));
+		Assert.assertTrue("Issue was not reported on package D class A", issues.containsKey(BaseRuleTest.PROJECT_KEY + ":packageD/ClassA.java"));
 		
 	}
 	

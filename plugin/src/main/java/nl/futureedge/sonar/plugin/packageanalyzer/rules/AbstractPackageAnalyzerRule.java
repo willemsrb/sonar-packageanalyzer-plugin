@@ -9,6 +9,7 @@ import org.sonar.api.batch.sensor.issue.NewIssue;
 import org.sonar.api.config.Settings;
 import org.sonar.api.measures.Metric;
 import org.sonar.api.rule.RuleKey;
+import org.sonar.api.server.rule.RulesDefinition.NewRule;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
@@ -26,6 +27,7 @@ public abstract class AbstractPackageAnalyzerRule implements PackageAnalyzerRule
 	private static final Logger LOGGER = Loggers.get(AbstractPackageAnalyzerRule.class);
 
 	private final String ruleKey;
+	private final Settings settings;
 
 	/**
 	 * Constructor.
@@ -35,9 +37,33 @@ public abstract class AbstractPackageAnalyzerRule implements PackageAnalyzerRule
 	 */
 	protected AbstractPackageAnalyzerRule(final String ruleKey) {
 		this.ruleKey = ruleKey;
+		this.settings = null; //not used for MissingPackageInfo
+	}
+	
+	/**
+	 * Constructor.
+	 *
+	 * @param ruleKey
+	 * 			rule key
+	 * @param settings
+	 *			settings
+	 */
+	 protected AbstractPackageAnalyzerRule(final String ruleKey, final Settings settings) {
+		this.ruleKey = ruleKey;
+		this.settings = settings;
+	 }
+	 
+	 public Settings getSettings() {
+		return this.settings;
+	 }
+	 
+	 @Override
+	 public void defineRemediationTimes(final NewRule rule) {
+		if(!PackageAnalyzerProperties.shouldRegisterOnPackage(getSettings()) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(getSettings()))
+			rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("12min", "0min"));
+		else rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("5min", "45min"));
 	}
 
-	@Override
 	public final void scanModel(final SensorContext context, final String language, final Model<Location> model) {
 		final ActiveRule rule = context.activeRules().find(RuleKey.of(BaseRules.getRepositoryKey(language), ruleKey));
 		if (rule == null) {
@@ -70,7 +96,7 @@ public abstract class AbstractPackageAnalyzerRule implements PackageAnalyzerRule
 	}
 
 	private boolean newIssue(final SensorContext context, final ActiveRule rule, final External<Location> model, double gap, final String message) {
-		final Location location = model.getExternal();
+		final Location location = model == null ? null : model.getExternal();
 		if (location == null) {
 			LOGGER.debug("Rule {} triggered, but {} did not contain a location to register issue", rule.ruleKey(),
 					model);

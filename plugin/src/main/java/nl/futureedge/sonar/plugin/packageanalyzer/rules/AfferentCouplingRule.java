@@ -30,21 +30,18 @@ public final class AfferentCouplingRule extends AbstractPackageAnalyzerRule impl
 	private static final String RULE_KEY = "afferent-coupling";
 	private static final String PARAM_MAXIMUM = "maximum";
 
-	private final Settings settings;
-
 	/**
 	 * Afferent coupling rule.
 	 */
 	public AfferentCouplingRule(final Settings settings) {
-		super(RULE_KEY);
-		this.settings = settings;
+		super(RULE_KEY, settings);
 	}
 
 	@Override
 	public void define(final NewRepository repository) {
 		LOGGER.debug("Defining rule in repostiory {}", repository.key());
 		final NewRule afferentCouplingRule = repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL)
-				.setSeverity(Severity.MAJOR).setGapDescription("for each class inside the package.").setName("Afferent Coupling").setHtmlDescription(
+				.setSeverity(Severity.MAJOR).setGapDescription("for each related class inside the package.").setName("Afferent Coupling").setHtmlDescription(
 						"The number of other packages that depend upon classes within the package is an indicator of the package's responsibility.");
 		//The number of classes in other packages that depend upon classes within the package
 		afferentCouplingRule.createParam(PARAM_MAXIMUM).setName(PARAM_MAXIMUM)
@@ -52,13 +49,6 @@ public final class AfferentCouplingRule extends AbstractPackageAnalyzerRule impl
 				.setType(RuleParamType.INTEGER).setDefaultValue("25");
 		
 		defineRemediationTimes(afferentCouplingRule);
-	}
-
-	@Override
-	public void defineRemediationTimes(final NewRule rule) {
-		if(!PackageAnalyzerProperties.shouldRegisterOnPackage(settings) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
-			rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("12min", "0min"));
-		else rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("5min", "45min"));
 	}
 	
 	@Override
@@ -73,7 +63,7 @@ public final class AfferentCouplingRule extends AbstractPackageAnalyzerRule impl
 			if (afferentCoupling > maximum) {
 				final Set<Class<Location>> classes = selectClassesWithAfferentUsage(packageToCheck.getClasses());
 
-				registerIssue(context, settings, rule, packageToCheck, classes,
+				registerIssue(context, getSettings(), rule, packageToCheck, classes,
 						"Reduce number of packages that use this package (allowed: " + maximum + ", actual: "
 								+ afferentCoupling + ")");
 			}

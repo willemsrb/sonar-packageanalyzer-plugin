@@ -36,14 +36,11 @@ public final class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRu
 
 	private static final String RULE_KEY = "package-cycle";
 
-	private final Settings settings;
-
 	/**
 	 * Constructor.
 	 */
 	public PackageDependencyCyclesRule(final Settings settings) {
-		super(RULE_KEY);
-		this.settings = settings;
+		super(RULE_KEY, settings);
 	}
 
 	@Override
@@ -56,7 +53,7 @@ public final class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRu
 	
 	@Override
 	public void defineRemediationTimes(final NewRule rule) {		
-		if(PackageAnalyzerProperties.shouldRegisterOnPackage(settings) && !PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
+		if(PackageAnalyzerProperties.shouldRegisterOnPackage(getSettings()) && !PackageAnalyzerProperties.shouldRegisterOnAllClasses(getSettings()))
 			rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("40min", "10min"));
 		else rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("15min", "5min"));
 	}
@@ -66,6 +63,7 @@ public final class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRu
 		// Analyze
 		final Analyzer<Location> analyzer = new Analyzer<>();
 		final List<PackageCycle<Location>> packageCycles = analyzer.findPackageCycles(model);
+		final Settings settings = getSettings();
 		LOGGER.debug("Package cycles: {}", packageCycles.size());
 
 		int packageCycleIdentifier = 0;

@@ -28,21 +28,18 @@ public final class InstabilityRule extends AbstractPackageAnalyzerRule implement
 	private static final String RULE_KEY = "instability";
 	private static final String PARAM_MAXIMUM = "maximum";
 
-	private final Settings settings;
-
 	/**
 	 * Instability rule.
 	 */
 	public InstabilityRule(final Settings settings) {
-		super(RULE_KEY);
-		this.settings = settings;
+		super(RULE_KEY, settings);
 	}
 
 	@Override
 	public void define(final NewRepository repository) {
 		LOGGER.debug("Defining rule in repostiory {}", repository.key());
 		final NewRule instabilityRule = repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL)
-				.setSeverity(Severity.MAJOR).setName("Instability").setGapDescription("for each class inside the package.").setHtmlDescription(
+				.setSeverity(Severity.MAJOR).setName("Instability").setGapDescription("for each related class inside the package.").setHtmlDescription(
 						"The ratio of efferent coupling (Ce) to total coupling (Ce + Ca) such that I = Ce / (Ce + Ca). This metric is an indicator of the package's resilience to change.<br/>"
 								+ "The range for this metric is 0 to 100%, with I=0% indicating a completely stable package and I=100% indicating a completely instable package.");
 		//Maximum instability allowed in a package	
@@ -51,13 +48,6 @@ public final class InstabilityRule extends AbstractPackageAnalyzerRule implement
 			.setDefaultValue("75");
 		
 		defineRemediationTimes(instabilityRule);
-	}
-	
-	@Override
-	public void defineRemediationTimes(final NewRule rule) {
-		if(!PackageAnalyzerProperties.shouldRegisterOnPackage(settings) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
-			rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("12min", "0min"));
-		else rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("5min", "45min"));
 	}
 
 	@Override
@@ -71,7 +61,7 @@ public final class InstabilityRule extends AbstractPackageAnalyzerRule implement
 				final Set<Class<Location>> classes = EfferentCouplingRule
 						.selectClassesWithEfferentUsage(packageToCheck.getClasses());
 
-				registerIssue(context, settings, rule, packageToCheck, classes,
+				registerIssue(context, getSettings(), rule, packageToCheck, classes,
 						"Reduce number of packages used by this package to lower instability (allowed: " + maximum
 								+ "%, actual: " + instability + "%)");
 			}

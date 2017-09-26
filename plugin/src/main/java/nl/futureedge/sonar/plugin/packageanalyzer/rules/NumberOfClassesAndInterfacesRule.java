@@ -25,14 +25,11 @@ public final class NumberOfClassesAndInterfacesRule extends AbstractPackageAnaly
 	private static final String RULE_KEY = "number-of-classes-and-interfaces";
 	private static final String PARAM_MAXIMUM = "maximum";
 
-	private final Settings settings;
-
 	/**
 	 * Constructor.
 	 */
 	public NumberOfClassesAndInterfacesRule(final Settings settings) {
-		super(RULE_KEY);
-		this.settings = settings;
+		super(RULE_KEY, settings);
 	}
 
 	@Override
@@ -51,7 +48,7 @@ public final class NumberOfClassesAndInterfacesRule extends AbstractPackageAnaly
 	
 	@Override
 	public void defineRemediationTimes(final NewRule rule) {
-		if(!PackageAnalyzerProperties.shouldRegisterOnPackage(settings) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
+		if(!PackageAnalyzerProperties.shouldRegisterOnPackage(getSettings()) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(getSettings()))
 			rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("3min", "0min"));
 		else rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("2min", "58min"));
 	}
@@ -66,7 +63,7 @@ public final class NumberOfClassesAndInterfacesRule extends AbstractPackageAnaly
 			LOGGER.debug("Package {}: total={}", packageToCheck.getName(), classcount);
 
 			if (classcount > maximum) {
-				registerIssue(context, settings, rule, packageToCheck, packageToCheck.getClasses(),
+				registerIssue(context, getSettings(), rule, packageToCheck, packageToCheck.getClasses(),
 						"Reduce number of classes in package (allowed: " + maximum + ", actual: " + classcount + ")");
 			}
 		}

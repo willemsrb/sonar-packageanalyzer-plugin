@@ -29,14 +29,11 @@ public final class AbstractnessRule extends AbstractPackageAnalyzerRule implemen
 	private static final String RULE_KEY = "abstractness";
 	private static final String PARAM_MAXIMUM = "maximum";
 
-	private final Settings settings;
-
 	/**
 	 * Abstractness rule.
 	 */
 	public AbstractnessRule(final Settings settings) {
-		super(RULE_KEY);
-		this.settings = settings;
+		super(RULE_KEY, settings);
 	}
 
 	@Override
@@ -52,13 +49,6 @@ public final class AbstractnessRule extends AbstractPackageAnalyzerRule implemen
 			.setDefaultValue("75");
 		
 		defineRemediationTimes(abstractnessRule);
-	}
-	
-	@Override
-	public void defineRemediationTimes(final NewRule rule) {
-		if(!PackageAnalyzerProperties.shouldRegisterOnPackage(settings) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings))
-			rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("12min", "0min"));
-		else rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("5min", "45min"));
 	}
 
 	@Override
@@ -76,10 +66,22 @@ public final class AbstractnessRule extends AbstractPackageAnalyzerRule implemen
 					abstractClasses, totalClasses, abstractness);
 
 			if (abstractness > maximum) {
-				registerIssue(context, settings, rule, packageToCheck, classes,
+				registerIssue(context, getSettings(), rule, packageToCheck, classes,
 						"Reduce number of abstract classes in this package (allowed: " + maximum + "%, actual: "
 								+ abstractness + "%)");
 			}
 		}
+	}
+	
+	protected static int calcAbstractness(final Package<Location> packageToCheck) {
+		final Set<Class<Location>> classes = packageToCheck.getClasses().stream().filter(Class::isAbstract)
+				.collect(Collectors.toSet());
+		final int abstractClasses = classes.size();
+		final int totalClasses = packageToCheck.getClasses().size();
+		final int abstractness = totalClasses == 0 ? 0 : (abstractClasses * 100 / totalClasses);
+		LOGGER.debug("Package {}: abstract={}, total={}, abstractness={}", packageToCheck.getName(),
+					abstractClasses, totalClasses, abstractness);
+		
+		return abstractness;
 	}
 }
