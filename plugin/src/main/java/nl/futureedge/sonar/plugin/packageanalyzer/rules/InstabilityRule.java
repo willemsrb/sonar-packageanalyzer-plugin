@@ -13,6 +13,7 @@ import org.sonar.api.server.rule.RulesDefinition.NewRule;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
+import nl.futureedge.sonar.plugin.packageanalyzer.settings.PackageAnalyzerProperties;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Class;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Model;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Package;
@@ -27,26 +28,26 @@ public final class InstabilityRule extends AbstractPackageAnalyzerRule implement
 	private static final String RULE_KEY = "instability";
 	private static final String PARAM_MAXIMUM = "maximum";
 
-	private final Settings settings;
-
 	/**
 	 * Instability rule.
 	 */
 	public InstabilityRule(final Settings settings) {
-		super(RULE_KEY);
-		this.settings = settings;
+		super(RULE_KEY, settings);
 	}
 
 	@Override
 	public void define(final NewRepository repository) {
 		LOGGER.debug("Defining rule in repostiory {}", repository.key());
 		final NewRule instabilityRule = repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL)
-				.setSeverity(Severity.MAJOR).setName("Instability").setHtmlDescription(
+				.setSeverity(Severity.MAJOR).setName("Instability").setGapDescription("for each related class inside the package.").setHtmlDescription(
 						"The ratio of efferent coupling (Ce) to total coupling (Ce + Ca) such that I = Ce / (Ce + Ca). This metric is an indicator of the package's resilience to change.<br/>"
 								+ "The range for this metric is 0 to 100%, with I=0% indicating a completely stable package and I=100% indicating a completely instable package.");
+		//Maximum instability allowed in a package	
 		instabilityRule.createParam(PARAM_MAXIMUM).setName(PARAM_MAXIMUM)
-				.setDescription("Maximum instability (%) of a package allowed").setType(RuleParamType.INTEGER)
-				.setDefaultValue("75");
+			.setDescription("Maximum instability (%) of a package allowed").setType(RuleParamType.INTEGER)
+			.setDefaultValue("75");
+		
+		defineRemediationTimes(instabilityRule);
 	}
 
 	@Override
@@ -54,22 +55,27 @@ public final class InstabilityRule extends AbstractPackageAnalyzerRule implement
 		final Integer maximum = Integer.valueOf(rule.param(PARAM_MAXIMUM));
 
 		for (final Package<Location> packageToCheck : model.getPackages()) {
-			final int afferentCoupling = packageToCheck.getUsedByPackages().size();
-			final int efferentCoupling = packageToCheck.getPackageUsages().size();
-			final int totalCoupling = efferentCoupling + afferentCoupling;
-			final int instability = totalCoupling == 0 ? 0 : (efferentCoupling * 100) / totalCoupling;
-
-			LOGGER.debug("Package {}: efferent={}, total={}, instability={}", packageToCheck.getName(),
-					efferentCoupling, totalCoupling, instability);
+			final int instability = calcInstability(packageToCheck);
 
 			if (instability > maximum) {
 				final Set<Class<Location>> classes = EfferentCouplingRule
 						.selectClassesWithEfferentUsage(packageToCheck.getClasses());
 
-				registerIssue(context, settings, rule, packageToCheck, classes,
+				registerIssue(context, getSettings(), rule, packageToCheck, classes,
 						"Reduce number of packages used by this package to lower instability (allowed: " + maximum
 								+ "%, actual: " + instability + "%)");
 			}
 		}
+	}
+	
+	protected static int calcInstability(final Package<Location> packageToCheck) {
+		final int afferentCoupling = packageToCheck.getUsedByPackages().size();
+		final int efferentCoupling = packageToCheck.getPackageUsages().size();
+		final int totalCoupling = efferentCoupling + afferentCoupling;
+		final int instability = totalCoupling == 0 ? 0 : (efferentCoupling * 100) / totalCoupling;
+		LOGGER.debug("Package {}: efferent={}, total={}, instability={}", packageToCheck.getName(),
+					efferentCoupling, totalCoupling, instability);
+		
+		return instability;
 	}
 }

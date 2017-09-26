@@ -5,6 +5,7 @@ import org.sonar.api.batch.sensor.SensorContext;
 import org.sonar.api.ce.ComputeEngineSide;
 import org.sonar.api.server.ServerSide;
 import org.sonar.api.server.rule.RulesDefinition;
+import org.sonar.api.server.rule.RulesDefinition.NewRule;
 import org.sonar.api.server.ws.Definable;
 import org.sonarsource.api.sonarlint.SonarLintSide;
 
@@ -30,6 +31,13 @@ public interface PackageAnalyzerRule extends Definable<RulesDefinition.NewReposi
 	 */
 	void scanModel(SensorContext context, String language, Model<Location> model);
 
+	/**
+	 * Defining remediation times for the rule.
+	 * @param rule
+	 * 			Rule to be defined
+	 */
+	void defineRemediationTimes(final NewRule rule);
+	
 	/**
 	 * Does this rule support the given language?
 	 * 

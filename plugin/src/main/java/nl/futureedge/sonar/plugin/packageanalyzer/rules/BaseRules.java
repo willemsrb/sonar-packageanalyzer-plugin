@@ -46,7 +46,6 @@ public class BaseRules implements RulesDefinition {
 	@Override
 	public final void define(final Context context) {
 		final NewRepository repository = context.createRepository(getRepositoryKey(language), language).setName(NAME);
-
 		for (final PackageAnalyzerRule rule : rules) {
 			if (rule.supportsLanguage(language)) {
 				rule.define(repository);

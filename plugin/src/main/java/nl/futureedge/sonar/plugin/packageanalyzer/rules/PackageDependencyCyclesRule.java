@@ -17,7 +17,9 @@ import org.sonar.api.rules.RuleType;
 import org.sonar.api.server.rule.RulesDefinition.NewRepository;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
+import org.sonar.api.server.rule.RulesDefinition.NewRule;
 
+import nl.futureedge.sonar.plugin.packageanalyzer.settings.PackageAnalyzerProperties;
 import nl.futureedge.sonar.plugin.packageanalyzer.analyzer.Analyzer;
 import nl.futureedge.sonar.plugin.packageanalyzer.analyzer.PackageCycle;
 import nl.futureedge.sonar.plugin.packageanalyzer.metrics.PackageAnalyzerMetrics;
@@ -34,21 +36,26 @@ public final class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRu
 
 	private static final String RULE_KEY = "package-cycle";
 
-	private final Settings settings;
-
 	/**
 	 * Constructor.
 	 */
 	public PackageDependencyCyclesRule(final Settings settings) {
-		super(RULE_KEY);
-		this.settings = settings;
+		super(RULE_KEY, settings);
 	}
 
 	@Override
 	public void define(final NewRepository repository) {
-		repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL).setSeverity(Severity.CRITICAL)
+		final NewRule packageDependencyCyclesRule = repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL).setSeverity(Severity.CRITICAL)
 				.setName("Package Dependency Cycles").setHtmlDescription(
 						"Package dependency cycles are reported along with the hierarchical paths of packages participating in package dependency cycles.");
+		defineRemediationTimes(packageDependencyCyclesRule);
+	}
+	
+	@Override
+	public void defineRemediationTimes(final NewRule rule) {		
+		if(PackageAnalyzerProperties.shouldRegisterOnPackage(getSettings()) && !PackageAnalyzerProperties.shouldRegisterOnAllClasses(getSettings()))
+			rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("40min", "10min"));
+		else rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("15min", "5min"));
 	}
 
 	@Override
@@ -56,6 +63,7 @@ public final class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRu
 		// Analyze
 		final Analyzer<Location> analyzer = new Analyzer<>();
 		final List<PackageCycle<Location>> packageCycles = analyzer.findPackageCycles(model);
+		final Settings settings = getSettings();
 		LOGGER.debug("Package cycles: {}", packageCycles.size());
 
 		int packageCycleIdentifier = 0;
@@ -64,9 +72,12 @@ public final class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRu
 		// Rule
 		for (final PackageCycle<Location> packageCycle : packageCycles) {
 			packageCycleIdentifier++;
-
+			
+			boolean onlyFirstPackage = true; // Allows registering only on the first package of the cycle 
+			boolean finished = false; // True if all issues for the current cycle are reported
 			final List<Package<Location>> packagesInCycle = packageCycle.getPackagesInCycle();
-			for (int packageInCycleIndex = 0; packageInCycleIndex < packagesInCycle.size(); packageInCycleIndex++) {
+			final int cycleSize = packagesInCycle.size(); // Number of packages in each cycle
+			for (int packageInCycleIndex = 0; packageInCycleIndex < cycleSize; packageInCycleIndex++) {
 				final Package<Location> packageInCycle = packagesInCycle.get(packageInCycleIndex);
 				final int nextPackageInCycleIndex = packageInCycleIndex + 1;
 				final Package<Location> nextPackageInCycle = packagesInCycle
@@ -82,11 +93,26 @@ public final class PackageDependencyCyclesRule extends AbstractPackageAnalyzerRu
 
 				// Only select classes that use the 'next' package
 				final Set<Class<Location>> classes = selectClasses(packageInCycle.getClasses(), nextPackageInCycle);
-
-				registerIssue(context, settings, rule, packageInCycle, classes, message);
+				
+				//Number of issues registered depending on the server settings
+				if(onlyFirstPackage && !finished && packageInCycle.getExternal() != null && 
+						PackageAnalyzerProperties.shouldRegisterOnPackage(settings) && !PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings)) {
+					registerIssue(context, settings, rule, packageInCycle, cycleSize, message); // Single issue in the first package of the cycle
+					finished = true;
+				}
+				else if(!finished) {
+					if(PackageAnalyzerProperties.shouldRegisterOnFallback(settings) && 
+							!PackageAnalyzerProperties.shouldRegisterOnAllClasses(settings)) {
+						registerIssue(context, rule, classes.iterator().next(), message); // Fallback - Issues on the first class of each package in the cycle
+						onlyFirstPackage = false;
+					}
+					else {
+						registerIssue(context, settings, rule, packageInCycle, classes, message);
+						if(packageInCycle.getExternal() != null) onlyFirstPackage = false;
+					}
+				}
 			}
 		}
-
 		// Measures
 		for (final Map.Entry<Package<Location>, StringBuilder> measure : identifierMeasures.entrySet()) {
 			registerMeasure(context, PackageAnalyzerMetrics.PACKAGE_DEPENDENCY_CYCLES_IDENTIFIER, measure.getKey(),

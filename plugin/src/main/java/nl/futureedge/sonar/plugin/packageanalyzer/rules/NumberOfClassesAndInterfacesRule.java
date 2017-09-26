@@ -11,6 +11,7 @@ import org.sonar.api.server.rule.RulesDefinition.NewRule;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
+import nl.futureedge.sonar.plugin.packageanalyzer.settings.PackageAnalyzerProperties;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Model;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Package;
 
@@ -24,25 +25,32 @@ public final class NumberOfClassesAndInterfacesRule extends AbstractPackageAnaly
 	private static final String RULE_KEY = "number-of-classes-and-interfaces";
 	private static final String PARAM_MAXIMUM = "maximum";
 
-	private final Settings settings;
-
 	/**
 	 * Constructor.
 	 */
 	public NumberOfClassesAndInterfacesRule(final Settings settings) {
-		super(RULE_KEY);
-		this.settings = settings;
+		super(RULE_KEY, settings);
 	}
 
 	@Override
 	public void define(final NewRepository repository) {
 		LOGGER.debug("Defining rule in repostiory {}", repository.key());
 		final NewRule numberOfClassesAndInterfacesRule = repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL)
-				.setSeverity(Severity.MAJOR).setName("Number of Classes and Interfaces").setHtmlDescription(
+				.setSeverity(Severity.MAJOR).setGapDescription("for each class inside the package.").setName("Number of Classes and Interfaces").setHtmlDescription(
 						"The number of concrete and abstract classes (and interfaces) in the package is an indicator of the extensibility of the package.");
+		//Maximum number of classes and interfaces in a package
 		numberOfClassesAndInterfacesRule.createParam(PARAM_MAXIMUM).setName(PARAM_MAXIMUM)
 				.setDescription("Maximum number of classes and interfaces allowed in the package")
 				.setType(RuleParamType.INTEGER).setDefaultValue("50");
+		
+		defineRemediationTimes(numberOfClassesAndInterfacesRule);
+	}
+	
+	@Override
+	public void defineRemediationTimes(final NewRule rule) {
+		if(!PackageAnalyzerProperties.shouldRegisterOnPackage(getSettings()) && PackageAnalyzerProperties.shouldRegisterOnAllClasses(getSettings()))
+			rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("3min", "0min"));
+		else rule.setDebtRemediationFunction(rule.debtRemediationFunctions().linearWithOffset("2min", "58min"));
 	}
 
 	@Override
@@ -55,7 +63,7 @@ public final class NumberOfClassesAndInterfacesRule extends AbstractPackageAnaly
 			LOGGER.debug("Package {}: total={}", packageToCheck.getName(), classcount);
 
 			if (classcount > maximum) {
-				registerIssue(context, settings, rule, packageToCheck, packageToCheck.getClasses(),
+				registerIssue(context, getSettings(), rule, packageToCheck, packageToCheck.getClasses(),
 						"Reduce number of classes in package (allowed: " + maximum + ", actual: " + classcount + ")");
 			}
 		}

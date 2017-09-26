@@ -14,6 +14,7 @@ import org.sonar.api.server.rule.RulesDefinition.NewRule;
 import org.sonar.api.utils.log.Logger;
 import org.sonar.api.utils.log.Loggers;
 
+import nl.futureedge.sonar.plugin.packageanalyzer.settings.PackageAnalyzerProperties;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Class;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Model;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Package;
@@ -28,26 +29,26 @@ public final class AbstractnessRule extends AbstractPackageAnalyzerRule implemen
 	private static final String RULE_KEY = "abstractness";
 	private static final String PARAM_MAXIMUM = "maximum";
 
-	private final Settings settings;
-
 	/**
 	 * Abstractness rule.
 	 */
 	public AbstractnessRule(final Settings settings) {
-		super(RULE_KEY);
-		this.settings = settings;
+		super(RULE_KEY, settings);
 	}
 
 	@Override
 	public void define(final NewRepository repository) {
 		LOGGER.debug("Defining rule in repostiory {}", repository.key());
 		final NewRule abstractnessRule = repository.createRule(RULE_KEY).setType(RuleType.CODE_SMELL)
-				.setSeverity(Severity.MAJOR).setName("Abstractness").setHtmlDescription(
+				.setSeverity(Severity.MAJOR).setGapDescription("for each class inside the package.").setName("Abstractness").setHtmlDescription(
 						"The ratio of the number of abstract classes (and interfaces) in the analyzed package compared to the total number of classes in the analyzed package.<br/>"
 								+ "The range for this metric is 0% to 100%, with A=0% indicating a completely concrete package and A=100% indicating a completely abstract package.");
+		//Maximum abstractness allowed in a package	
 		abstractnessRule.createParam(PARAM_MAXIMUM).setName(PARAM_MAXIMUM)
-				.setDescription("Maximum abstractness of a package allowed").setType(RuleParamType.INTEGER)
-				.setDefaultValue("75");
+			.setDescription("Maximum abstractness of a package allowed").setType(RuleParamType.INTEGER)
+			.setDefaultValue("75");
+		
+		defineRemediationTimes(abstractnessRule);
 	}
 
 	@Override
@@ -65,10 +66,22 @@ public final class AbstractnessRule extends AbstractPackageAnalyzerRule implemen
 					abstractClasses, totalClasses, abstractness);
 
 			if (abstractness > maximum) {
-				registerIssue(context, settings, rule, packageToCheck, classes,
+				registerIssue(context, getSettings(), rule, packageToCheck, classes,
 						"Reduce number of abstract classes in this package (allowed: " + maximum + "%, actual: "
 								+ abstractness + "%)");
 			}
 		}
+	}
+	
+	protected static int calcAbstractness(final Package<Location> packageToCheck) {
+		final Set<Class<Location>> classes = packageToCheck.getClasses().stream().filter(Class::isAbstract)
+				.collect(Collectors.toSet());
+		final int abstractClasses = classes.size();
+		final int totalClasses = packageToCheck.getClasses().size();
+		final int abstractness = totalClasses == 0 ? 0 : (abstractClasses * 100 / totalClasses);
+		LOGGER.debug("Package {}: abstract={}, total={}, abstractness={}", packageToCheck.getName(),
+					abstractClasses, totalClasses, abstractness);
+		
+		return abstractness;
 	}
 }

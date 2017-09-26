@@ -15,6 +15,7 @@ import org.sonar.api.config.PropertyDefinitions;
 import org.sonar.api.config.Settings;
 import org.sonar.api.rule.RuleKey;
 import org.sonar.api.server.rule.RulesDefinition.NewRepository;
+import org.sonar.api.server.rule.RulesDefinition.NewRule;
 
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Model;
 import nl.futureedge.sonar.plugin.packageanalyzer.model.Package;
@@ -75,6 +76,11 @@ public class AbstractPackageAnalyzerRuleTest extends BaseRuleTest {
 
 		@Override
 		public void define(NewRepository context) {
+			// Unused
+		}
+		
+		@Override
+		public void defineRemediationTimes(NewRule rule) {
 			// Unused
 		}
 

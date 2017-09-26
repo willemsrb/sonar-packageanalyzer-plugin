@@ -75,6 +75,18 @@ public final class PackageAnalyzerProperties {
 	}
 
 	/**
+	 * Should issues be registered using fallback?
+	 *
+	 * @param settings
+	 *            settings
+	 * @return true, if issues should be registered using fallback
+	 */
+	 public static boolean shouldRegisterOnFallback(final Settings settings) {
+		final String issueMode = settings.getString(ISSUE_MODE_KEY);
+		return ISSUE_MODE_FALLBACK.equals(issueMode);
+	 }
+	 
+	/**
 	 * Should issues be registered on packages?
 	 *
 	 * @param settings

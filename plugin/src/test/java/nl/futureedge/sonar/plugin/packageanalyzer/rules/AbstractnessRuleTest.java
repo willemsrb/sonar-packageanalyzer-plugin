@@ -69,7 +69,7 @@ public class AbstractnessRuleTest extends BaseRuleTest {
 	public void test() {
 		final Model<Location> model = createModel();
 		subject.scanModel(sensorContext, activeRule, model);
-
+		
 		// Check one issue on packageA
 		Assert.assertEquals(3, sensorContext.allIssues().size());
 		Map<String, Issue> issues = sensorContext.allIssues().stream().collect(
